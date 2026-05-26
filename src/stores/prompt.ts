@@ -35,6 +35,8 @@ export function usePromptStore() {
   const keyboardIndex = ref(0)
   const selectedUnit = ref<PromptUnit | null>(null)
   const variableValues = ref<Record<string, string>>({})
+  const filterCategory = ref('全部')
+  const filterTag = ref('')
   let _initPromise: Promise<void> | null = null
 
   /** 排序规则：收藏 > 最近使用 > 使用次数 > 更新时间 */
@@ -52,10 +54,16 @@ export function usePromptStore() {
   })
 
   const filteredItems = computed(() => {
-    if (!query.value.trim()) return sortedItems.value
-    return search(sortedItems.value, query.value)
-      .sort((a, b) => b.score - a.score)
-      .map(r => r.item)
+    let items = query.value.trim()
+      ? search(sortedItems.value, query.value).sort((a, b) => b.score - a.score).map(r => r.item)
+      : sortedItems.value
+    if (filterCategory.value && filterCategory.value !== '全部') {
+      items = items.filter(u => (u.category || '其它') === filterCategory.value)
+    }
+    if (filterTag.value) {
+      items = items.filter(u => u.tags.some(t => t === filterTag.value))
+    }
+    return items
   })
 
   const activeItem = computed(() => {
@@ -128,6 +136,8 @@ export function usePromptStore() {
     keyboardIndex,
     selectedUnit,
     variableValues,
+    filterCategory,
+    filterTag,
     filteredItems,
     sortedItems,
     activeItem,

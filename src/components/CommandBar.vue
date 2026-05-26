@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useTheme } from '../stores/theme'
@@ -9,6 +9,12 @@ const prompt = usePromptStore()
 const theme = useTheme()
 const inputRef = ref<HTMLInputElement | null>(null)
 const focused = ref(false)
+
+const showSearch = ref(true)
+watch(() => router.currentRoute.value, (route) => {
+  showSearch.value = route === 'call'
+  if (route !== 'call') prompt.query.value = ''
+}, { immediate: true })
 </script>
 
 <template>
@@ -33,7 +39,7 @@ const focused = ref(false)
     </nav>
 
     <!-- 中间：搜索 -->
-    <div class="search-wrap">
+    <div v-if="showSearch" class="search-wrap">
       <div :class="['search', { focused: focused || prompt.query.value }]">
         <svg class="search-ico" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round">
           <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />

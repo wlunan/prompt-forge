@@ -74,7 +74,7 @@ async function saveAsNew() {
 
 <style scoped>
 .compose-view { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--pf-bg); overflow: hidden; }
-.compose-body { flex: 1; display: grid; grid-template-columns: 220px 1fr 220px; }
+.compose-body { flex: 1; display: grid; grid-template-columns: 220px 1fr 220px; min-height: 0; overflow: hidden; }
 .compose-col { display: flex; flex-direction: column; border-right: 1px solid var(--pf-border); background: var(--pf-bg-elevated); }
 .compose-col:last-child { border-right: 0; border-left: 1px solid var(--pf-border); }
 .col-head { padding: 12px 14px 6px; font-size: 11px; font-weight: 600; color: var(--pf-text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
