@@ -49,9 +49,7 @@ const filteredItems = computed(() => {
 
 watch(filteredItems, (items) => {
   if (items.length === 0) { selectedId.value = ''; return }
-  if (!selectedId.value || !items.some(i => i.id === selectedId.value)) {
-    selectedId.value = items[0]?.id || ''
-  }
+  // 不自动选中第一条，让用户自己点
 }, { immediate: true })
 
 function addTag() { const t = tagInput.value.trim(); if (t && !editTags.value.includes(t)) editTags.value.push(t); tagInput.value = '' }
@@ -67,7 +65,17 @@ async function saveEdit() {
   const idx = promptStore.rawItems.value.findIndex(u => u.id === unit.id)
   if (idx === -1) return
   const detected = extractVariables(editBody.value)
-  const vars = detected.map(d => { const existing = editVars.value.find(v => v.name === d.name); return { name: d.name, required: existing?.required ?? d.required, defaultValue: existing?.defaultValue ?? d.defaultValue } })
+  // 合并：正文中的变量 + 手动添加的变量（去重）
+  const seen = new Set<string>()
+  const vars: Variable[] = []
+  for (const d of detected) {
+    const existing = editVars.value.find(v => v.name === d.name)
+    vars.push({ name: d.name, required: existing?.required ?? d.required, defaultValue: existing?.defaultValue ?? d.defaultValue })
+    seen.add(d.name)
+  }
+  for (const v of editVars.value) {
+    if (!seen.has(v.name)) { vars.push({ ...v }); seen.add(v.name) }
+  }
   const newVersion = bodyChanged ? (unit.version || 1) + 1 : (unit.version || 1)
   const now = new Date().toISOString()
   if (bodyChanged && unit.snapshots) { unit.snapshots.push({ version: unit.version || 1, body: unit.body, note: `编辑保存为版本 V${newVersion}`, createdAt: now }) }
