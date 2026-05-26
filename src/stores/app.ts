@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { getSettings, setSettings } from '../utils/storage'
 
 export interface AppSettings {
   closeAfterCopy: boolean
@@ -15,9 +16,7 @@ const settings = ref<AppSettings>({ ...DEFAULT_SETTINGS })
 export function useAppSettings() {
   async function load() {
     try {
-      const ds = (window as any).ztools?.dbStorage
-      if (!ds) return
-      const saved = ds.getItem('promptforge:settings')
+      const saved = await getSettings()
       if (saved && typeof saved === 'object') {
         if (typeof saved.closeAfterCopy === 'boolean') settings.value.closeAfterCopy = saved.closeAfterCopy
         if (typeof saved.autoFocus === 'boolean') settings.value.autoFocus = saved.autoFocus
@@ -29,8 +28,7 @@ export function useAppSettings() {
 
   async function save() {
     try {
-      const ds = (window as any).ztools?.dbStorage
-      if (ds) ds.setItem('promptforge:settings', { ...settings.value })
+      await setSettings({ ...settings.value })
     } catch (e) {
       console.error('Failed to save settings:', e)
     }

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
@@ -219,8 +219,8 @@ const highlightedContent = computed(() => {
 .top-bar {
   height: 48px; flex-shrink: 0;
   display: flex; align-items: center; padding: 0 16px; gap: 10px;
-  border-bottom: 1px solid var(--pf-border-soft);
-  background: var(--pf-surface);
+  border-bottom: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated);
 }
 .back-btn {
   width: 28px; height: 28px; border: 0; background: transparent;
@@ -236,13 +236,13 @@ const highlightedContent = computed(() => {
   padding: 14px 18px; display: flex; flex-direction: column; gap: 12px;
 }
 .preview-card {
-  background: var(--pf-surface); border: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated); border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius-sm); display: flex; flex-direction: column;
   min-height: 120px; max-height: 240px; overflow-y: auto;
 }
 .preview-head {
-  padding: 8px 12px; border-bottom: 1px solid var(--pf-border-soft);
-  background: var(--pf-surface-raised); display: flex; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--pf-border);
+  background: var(--pf-surface); display: flex; align-items: center;
   gap: 8px; font-size: 11.5px; color: var(--pf-text-muted); flex-shrink: 0;
 }
 .src-tag {
@@ -255,7 +255,7 @@ const highlightedContent = computed(() => {
   white-space: pre-wrap;
 }
 .preview-body :deep(.hl-var) {
-  background: var(--pf-primary-soft); color: var(--pf-primary);
+  background: var(--pf-accent-soft); color: var(--pf-accent);
   padding: 1px 4px; border-radius: 3px; font-weight: 600; font-size: 11.5px;
 }
 
@@ -266,7 +266,7 @@ const highlightedContent = computed(() => {
 .dup-banner.exact { background: var(--pf-danger-soft); color: #8B2020; border: 1px solid var(--pf-danger); }
 .dup-banner.similar { background: var(--pf-warning-soft); color: #7A4520; border: 1px solid var(--pf-warning); }
 .dup-actions { margin-left: auto; }
-.dup-actions a { color: var(--pf-primary); cursor: pointer; text-decoration: underline; }
+.dup-actions a { color: var(--pf-accent); cursor: pointer; text-decoration: underline; }
 
 .qsave-form {
   display: grid; grid-template-columns: 1fr 1fr;
@@ -279,18 +279,18 @@ const highlightedContent = computed(() => {
 .hint-sm { font-size: 10px; color: var(--pf-text-faint); font-weight: 400; }
 .form-field input, .form-field select {
   height: 30px; padding: 0 10px; border: 1px solid var(--pf-border);
-  border-radius: var(--pf-radius-sm); background: var(--pf-surface);
+  border-radius: var(--pf-radius-sm); background: var(--pf-bg-elevated);
   color: var(--pf-text); font-size: 12px; outline: none;
 }
-.form-field input:focus, .form-field select:focus { border-color: var(--pf-primary); }
-.form-field input:disabled { background: var(--pf-surface-raised); color: var(--pf-text-faint); }
+.form-field input:focus, .form-field select:focus { border-color: var(--pf-accent); }
+.form-field input:disabled { background: var(--pf-surface); color: var(--pf-text-faint); }
 .tags-input {
   display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px;
   border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm);
-  background: var(--pf-surface); min-height: 30px; align-items: center;
+  background: var(--pf-bg-elevated); min-height: 30px; align-items: center;
 }
 .chip {
-  background: var(--pf-tag-bg); color: var(--pf-tag-text);
+  background: var(--pf-surface); color: var(--pf-text-muted);
   padding: 1px 6px 1px 8px; border-radius: 10px; font-size: 11px;
   display: inline-flex; align-items: center; gap: 4px; font-weight: 500;
 }
@@ -302,11 +302,11 @@ const highlightedContent = computed(() => {
 }
 .vars-bar {
   display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 8px;
-  background: var(--pf-surface-raised); border: 1px solid var(--pf-border);
+  background: var(--pf-surface); border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius-sm); min-height: 30px; align-items: center;
 }
 .var-pill {
-  background: var(--pf-primary-soft); border: 0; color: var(--pf-primary);
+  background: var(--pf-accent-soft); border: 0; color: var(--pf-accent);
   padding: 2px 8px; border-radius: 10px; font-size: 11px;
   font-weight: 600; font-family: ui-monospace, monospace;
 }
@@ -315,7 +315,7 @@ const highlightedContent = computed(() => {
 .qsave-footer {
   height: 48px; flex-shrink: 0;
   border-top: 1px solid var(--pf-border);
-  background: var(--pf-surface-raised);
+  background: var(--pf-surface);
   display: flex; align-items: center; gap: 8px; padding: 0 18px;
 }
 .footer-hint { font-size: 11px; color: var(--pf-text-faint); display: flex; align-items: center; gap: 4px; }

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
@@ -281,7 +281,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
   display: grid; grid-template-columns: auto auto 1fr auto auto;
   align-items: center; gap: 12px;
   padding: 0 14px;
-  background: var(--pf-surface);
+  background: var(--pf-bg-elevated);
   border-bottom: 1px solid var(--pf-border);
 }
 .back-btn {
@@ -301,20 +301,20 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
   padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
   display: inline-flex; align-items: center; gap: 5px;
 }
-.view-switcher button.active { background: var(--pf-primary); color: #fff; }
+.view-switcher button.active { background: var(--pf-accent); color: #fff; }
 .badge {
   font-size: 10px; background: rgba(255,255,255,0.25);
   padding: 0 5px; border-radius: 8px;
 }
-.view-switcher button:not(.active) .badge { background: var(--pf-tag-bg); color: var(--pf-text-muted); }
+.view-switcher button:not(.active) .badge { background: var(--pf-surface); color: var(--pf-text-muted); }
 .spacer { flex: 1; }
 .new-btn {
   width: 30px; height: 30px; border-radius: var(--pf-radius-sm);
-  border: 1px solid var(--pf-border); background: var(--pf-surface);
+  border: 1px solid var(--pf-border); background: var(--pf-bg-elevated);
   color: var(--pf-text-muted); font-size: 16px;
   display: flex; align-items: center; justify-content: center;
 }
-.new-btn:hover { background: var(--pf-primary-soft); color: var(--pf-primary); }
+.new-btn:hover { background: var(--pf-accent-soft); color: var(--pf-accent); }
 .more-btn {
   width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
   color: var(--pf-text-muted); border-radius: 6px; font-size: 16px; font-weight: 700;
@@ -333,56 +333,56 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
 .lib-search { padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 6px; }
 .lib-search input {
   height: 30px; border: 1px solid var(--pf-border); border-radius: 6px;
-  background: var(--pf-surface); padding: 0 10px; font-size: 12px; outline: none;
+  background: var(--pf-bg-elevated); padding: 0 10px; font-size: 12px; outline: none;
 }
-.lib-search input:focus { border-color: var(--pf-primary); }
+.lib-search input:focus { border-color: var(--pf-accent); }
 .lib-search select {
   height: 24px; font-size: 11px; border: 1px solid var(--pf-border);
-  border-radius: 4px; background: var(--pf-surface); padding: 0 6px; outline: none;
+  border-radius: 4px; background: var(--pf-bg-elevated); padding: 0 6px; outline: none;
 }
 .lib-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 6px 10px; }
 .lib-item {
   padding: 8px 10px; border-radius: var(--pf-radius-sm);
   cursor: pointer; border: 1px solid transparent;
 }
-.lib-item:hover { background: rgba(74, 111, 165, 0.04); }
-.lib-item.active { background: var(--pf-primary-soft); border-color: var(--pf-primary); }
+.lib-item:hover { background: var(--pf-bg-elevated); }
+.lib-item.active { background: var(--pf-accent-soft); border-color: var(--pf-accent); }
 .item-head {
   font-size: 13px; font-weight: 500; color: var(--pf-text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   display: flex; align-items: center; gap: 6px;
 }
-.star { color: var(--pf-gold); font-size: 11px; }
+.star { color: var(--pf-amber); font-size: 11px; }
 .item-meta {
   display: flex; gap: 8px; align-items: center;
   font-size: 11px; color: var(--pf-text-muted); margin-top: 3px;
 }
 .v-tag { background: var(--pf-success-soft); color: var(--pf-success); padding: 0 4px; border-radius: 3px; font-size: 10px; font-weight: 600; }
-.count { color: var(--pf-gold); font-weight: 600; }
+.count { color: var(--pf-amber); font-weight: 600; }
 .empty-list { padding: 24px 0; text-align: center; font-size: 12px; color: var(--pf-text-faint); }
 .lib-footer { padding: 8px 10px; border-top: 1px solid var(--pf-border); display: flex; gap: 6px; }
 .lib-footer .btn { flex: 1; justify-content: center; }
 
 .lib-editor {
   display: flex; flex-direction: column; min-height: 0;
-  background: var(--pf-surface);
+  background: var(--pf-bg-elevated);
 }
 .editor-tabs {
   height: 36px; flex-shrink: 0;
   display: flex; align-items: center; gap: 4px;
   padding: 0 14px;
   border-bottom: 1px solid var(--pf-border);
-  background: var(--pf-surface-raised);
+  background: var(--pf-surface);
 }
 .editor-tabs button {
   border: 0; background: transparent; color: var(--pf-text-muted);
   padding: 4px 10px; font-size: 12.5px; font-weight: 500;
   position: relative; height: 36px;
 }
-.editor-tabs button.active { color: var(--pf-primary); font-weight: 600; }
+.editor-tabs button.active { color: var(--pf-accent); font-weight: 600; }
 .editor-tabs button.active::after {
   content: ''; position: absolute; left: 8px; right: 8px; bottom: 0;
-  height: 2px; background: var(--pf-primary); border-radius: 1px;
+  height: 2px; background: var(--pf-accent); border-radius: 1px;
 }
 .tab-info { margin-left: auto; font-size: 11px; color: var(--pf-text-faint); }
 
@@ -391,11 +391,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
 .field label { display: block; font-size: 12px; color: var(--pf-text-muted); font-weight: 500; margin-bottom: 6px; }
 .field input, .field textarea {
   width: 100%; border: 1px solid var(--pf-border);
-  background: var(--pf-surface); color: var(--pf-text);
+  background: var(--pf-bg-elevated); color: var(--pf-text);
   border-radius: var(--pf-radius-sm); padding: 8px 10px;
   font-size: 13px; outline: 0;
 }
-.field input:focus, .field textarea:focus { border-color: var(--pf-primary); }
+.field input:focus, .field textarea:focus { border-color: var(--pf-accent); }
 .body-editor { min-height: 200px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; }
 .var-config-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .var-config-head h3 { font-size: 14px; font-weight: 600; margin: 0; }
@@ -403,15 +403,15 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
 .var-row {
   display: grid; grid-template-columns: 1fr 1fr 50px 30px;
   gap: 8px; align-items: center; padding: 6px 10px;
-  border-bottom: 1px solid var(--pf-border-soft);
+  border-bottom: 1px solid var(--pf-border);
 }
-.var-row.header { font-size: 11px; font-weight: 600; color: var(--pf-text-muted); background: var(--pf-surface-raised); }
+.var-row.header { font-size: 11px; font-weight: 600; color: var(--pf-text-muted); background: var(--pf-surface); }
 .mini-input {
   height: 28px; padding: 2px 6px; font-size: 12px;
   border: 1px solid var(--pf-border); border-radius: var(--pf-radius-xs);
-  background: var(--pf-surface); outline: none; width: 100%;
+  background: var(--pf-bg-elevated); outline: none; width: 100%;
 }
-.mini-input:focus { border-color: var(--pf-primary); }
+.mini-input:focus { border-color: var(--pf-accent); }
 .del-btn {
   width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--pf-danger);
   color: var(--pf-danger); background: var(--pf-danger-soft);
@@ -423,10 +423,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
 
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
 .stat-card {
-  border: 1px solid var(--pf-border); background: var(--pf-surface-raised);
+  border: 1px solid var(--pf-border); background: var(--pf-surface);
   border-radius: var(--pf-radius-sm); padding: 16px; text-align: center;
 }
-.stat-val { font-size: 22px; font-weight: 700; color: var(--pf-primary); }
+.stat-val { font-size: 22px; font-weight: 700; color: var(--pf-accent); }
 .stat-lbl { font-size: 11px; color: var(--pf-text-faint); margin-top: 4px; }
 .stat-row { font-size: 12.5px; color: var(--pf-text); margin-bottom: 6px; }
 .stat-row strong { color: var(--pf-text-muted); }
@@ -435,7 +435,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey))
   height: 48px; flex-shrink: 0;
   border-top: 1px solid var(--pf-border);
   padding: 0 16px; display: flex; align-items: center; gap: 8px;
-  background: var(--pf-surface-raised);
+  background: var(--pf-surface);
 }
 .empty-editor {
   flex: 1; display: flex; align-items: center; justify-content: center;

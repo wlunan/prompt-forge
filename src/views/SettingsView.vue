@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
@@ -177,8 +177,8 @@ async function clearAll() {
 .top-bar {
   height: 48px; flex-shrink: 0;
   display: flex; align-items: center; padding: 0 16px; gap: 10px;
-  border-bottom: 1px solid var(--pf-border-soft);
-  background: var(--pf-surface);
+  border-bottom: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated);
 }
 .back-btn {
   width: 28px; height: 28px; border: 0; background: transparent;
@@ -208,12 +208,12 @@ async function clearAll() {
   padding: 7px 10px; border-radius: var(--pf-radius-sm);
   color: var(--pf-text); cursor: pointer; font-size: 12.5px;
 }
-.nav-item:hover { background: rgba(74, 111, 165, 0.06); }
-.nav-item.active { background: var(--pf-primary-soft); color: var(--pf-primary); font-weight: 500; }
+.nav-item:hover { background: var(--pf-bg-elevated); }
+.nav-item.active { background: var(--pf-accent-soft); color: var(--pf-accent); font-weight: 500; }
 
 .settings-content {
   overflow-y: auto; padding: 20px 24px;
-  background: var(--pf-surface);
+  background: var(--pf-bg-elevated);
 }
 .settings-content h2 { font-size: 16px; font-weight: 600; color: var(--pf-text); margin: 0 0 4px; }
 .sub { font-size: 12px; color: var(--pf-text-muted); margin: 0 0 18px; }
@@ -221,7 +221,7 @@ async function clearAll() {
 .setting-group h3 { font-size: 12.5px; font-weight: 600; color: var(--pf-text-muted); margin: 0 0 10px; }
 .setting-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 0; border-bottom: 1px solid var(--pf-border-soft);
+  padding: 10px 0; border-bottom: 1px solid var(--pf-border);
 }
 .setting-row:last-of-type { border-bottom: 0; }
 .info { display: flex; flex-direction: column; gap: 2px; padding-right: 16px; }
@@ -236,9 +236,9 @@ async function clearAll() {
   content: ''; position: absolute; left: 2px; top: 2px;
   width: 14px; height: 14px; border-radius: 50%;
   background: #fff; transition: left 0.12s;
-  box-shadow: var(--pf-shadow-xs);
+  box-shadow: var(--pf-shadow-sm);
 }
-.toggle.on { background: var(--pf-primary); }
+.toggle.on { background: var(--pf-accent); }
 .toggle.on::before { left: 16px; }
 .lock-tag {
   font-size: 10px; color: var(--pf-text-faint);
@@ -248,17 +248,17 @@ async function clearAll() {
 .file-btn { cursor: pointer; }
 .about-card {
   display: flex; align-items: center; gap: 16px;
-  background: var(--pf-surface-raised); border: 1px solid var(--pf-border);
+  background: var(--pf-surface); border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius); padding: 20px; margin: 10px 0 20px;
 }
 .about-logo {
-  width: 52px; height: 52px; background: var(--pf-primary);
+  width: 52px; height: 52px; background: var(--pf-accent);
   color: #fff; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 800;
 }
 .about-info h3 { font-size: 15px; font-weight: 700; margin: 0 0 2px; color: var(--pf-text); }
-.v-num { font-size: 12px; color: var(--pf-primary); font-weight: 600; margin: 0 0 4px; }
+.v-num { font-size: 12px; color: var(--pf-accent); font-weight: 600; margin: 0 0 4px; }
 .copyright { font-size: 11px; color: var(--pf-text-faint); margin: 0; }
 .privacy-list { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--pf-text); line-height: 1.7; }
 .privacy-list li + li { margin-top: 4px; }

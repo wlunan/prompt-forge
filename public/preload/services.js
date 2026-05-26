@@ -25,3 +25,25 @@ window.services = {
     return filePath
   }
 }
+
+// KV 存储封装（基于 ztools.db）
+const DB_PREFIX = 'promptforge:'
+window.kvStorage = {
+  get(key) {
+    const doc = window.ztools.db.get(DB_PREFIX + key)
+    return doc ? doc.data : null
+  },
+  set(key, value) {
+    const id = DB_PREFIX + key
+    const existing = window.ztools.db.get(id)
+    const doc = existing
+      ? { _id: id, _rev: existing._rev, data: value }
+      : { _id: id, data: value }
+    return window.ztools.db.put(doc)
+  },
+  remove(key) {
+    const id = DB_PREFIX + key
+    const existing = window.ztools.db.get(id)
+    if (existing) return window.ztools.db.remove(existing)
+  }
+}

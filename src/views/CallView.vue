@@ -19,33 +19,28 @@ async function handleCopy() {
   try {
     let text: string
     if (unit.variables && unit.variables.length > 0) {
-      text = renderVariables(unit.body, prompt.variableValues.value)
-      // 检查必填项
       const missing = unit.variables
         .filter(v => v.required)
         .filter(v => !prompt.variableValues.value[v.name]?.trim())
       if (missing.length > 0) {
-        showNotification(`请填写必填变量: ${missing.map(v => v.name).join(', ')}`)
+        showNotification(`请填写: ${missing.map(v => v.name).join(', ')}`)
         return
       }
+      text = renderVariables(unit.body, prompt.variableValues.value)
     } else {
       text = unit.body
     }
     await copyText(text)
-    showNotification('✓ 提示词已复制到剪贴板')
-    prompt.recordUsage(unit.id)
-    if (appSettings.settings.value.closeAfterCopy) {
-      hideMainWindow()
-    }
-    // 复制成功后返回搜索
+    showNotification('✓ 已复制')
+    await prompt.recordUsage(unit.id)
+    if (appSettings.settings.value.closeAfterCopy) hideMainWindow()
     prompt.resetSelection()
   } catch (e: any) {
-    showNotification(`复制失败: ${e.message || e}`)
+    showNotification(`复制失败: ${e.message}`)
   }
 }
 
 function handleKeyDown(e: KeyboardEvent) {
-  // 全局快捷键
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
     e.preventDefault()
     router.enterWizard(prompt.query.value.trim())
@@ -71,7 +66,7 @@ function handleKeyDown(e: KeyboardEvent) {
       router.navigateTo('compose')
       return
     }
-    if (!isInput && (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'l') && prompt.activeItem.value) {
+    if (!isInput && (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'e') && prompt.activeItem.value) {
       e.preventDefault()
       router.navigateTo('library')
       return
@@ -89,9 +84,9 @@ function handleKeyDown(e: KeyboardEvent) {
       if (item.variables && item.variables.length > 0) {
         prompt.selectActive()
       } else {
-        copyText(item.body).then(() => {
-          showNotification('✓ 提示词已复制到剪贴板')
-          prompt.recordUsage(item.id)
+        copyText(item.body).then(async () => {
+          showNotification('✓ 已复制')
+          await prompt.recordUsage(item.id)
           if (appSettings.settings.value.closeAfterCopy) hideMainWindow()
         })
       }
@@ -136,26 +131,27 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
         />
       </template>
     </div>
-    <div class="call-footer">
-      <span class="footer-info">
-        <span class="info-dot">i</span>
-        {{ prompt.phase.value === 'search'
-          ? `共 ${prompt.filteredItems.value.length} 条提示词`
-          : (prompt.selectedUnit.value?.variables?.length ? '填写变量后按 Enter 复制' : '按 Enter 复制') }}
+    <footer class="call-footer">
+      <span class="status">
+        <span v-if="prompt.phase.value === 'search'" class="status-text">
+          {{ prompt.filteredItems.value.length }} 条提示词
+        </span>
+        <span v-else class="status-text">
+          填写完成后按 Enter 复制
+        </span>
       </span>
-      <div class="footer-keys">
-        <span v-if="prompt.phase.value === 'search'">
+      <div class="keys">
+        <template v-if="prompt.phase.value === 'search'">
           <kbd>↑</kbd><kbd>↓</kbd> 选择
-          <kbd style="margin-left:8px">Enter</kbd> 复制
-          <kbd style="margin-left:8px">E</kbd> 编辑
-          <kbd style="margin-left:8px">Esc</kbd> 关闭
-        </span>
-        <span v-else>
+          <kbd>Enter</kbd> 复制
+          <kbd>E</kbd> 编辑
+        </template>
+        <template v-else>
           <kbd>Tab</kbd> 切换
-          <kbd style="margin-left:8px">Esc</kbd> 返回
-        </span>
+          <kbd>Esc</kbd> 返回
+        </template>
       </div>
-    </div>
+    </footer>
   </div>
 </template>
 
@@ -164,35 +160,37 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
   width: 100%; height: 100%;
   display: flex; flex-direction: column;
   background: var(--pf-bg);
-  user-select: none;
-  overflow: hidden;
+  user-select: none; overflow: hidden;
 }
 .call-body {
   flex: 1; min-height: 0; overflow: hidden;
   display: flex; flex-direction: column;
 }
 .call-footer {
-  height: 40px; flex-shrink: 0;
+  height: 36px; flex-shrink: 0;
   border-top: 1px solid var(--pf-border);
-  background: var(--pf-bg);
+  background: var(--pf-bg-elevated);
   display: flex; align-items: center;
-  padding: 0 16px; gap: 10px;
-  font-size: 12px; color: var(--pf-text-muted);
+  padding: 0 20px; gap: 16px;
+  font-size: 12px;
+  transition: background 0.3s, border-color 0.3s;
 }
-.footer-info {
-  display: flex; align-items: center; gap: 8px;
-  flex: 1; overflow: hidden; white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.info-dot {
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--pf-primary-soft); color: var(--pf-primary);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-style: italic; font-weight: 600; font-size: 10px;
-  flex-shrink: 0;
-}
-.footer-keys {
-  color: var(--pf-text-faint); font-size: 11px;
+.status { flex: 1; }
+.status-text { color: var(--pf-text-muted); }
+.keys {
   display: flex; gap: 4px; align-items: center;
+  font-size: 11px; color: var(--pf-text-faint);
+}
+.keys kbd {
+  font: 9px/1 var(--pf-font-mono);
+  background: var(--pf-surface-raised);
+  border: 1px solid var(--pf-border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--pf-text-muted);
+  min-width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

@@ -1,114 +1,51 @@
-import type { PromptUnit, PromptDoc } from '../types'
+import type { PromptUnit } from '../types'
 
-const DB_PREFIX = 'promptforge:'
-const ALL_KEY = DB_PREFIX + 'prompts'
-
-function getDb() {
-  return (window as any).ztools?.db
+/** 获取 KV 存储实例（preload kvStorage 或 ztools.dbStorage） */
+function getKv() {
+  const preload = (window as any).kvStorage
+  if (preload) return preload
+  const ds = (window as any).ztools?.dbStorage
+  if (ds) return {
+    get: (key: string) => ds.getItem('promptforge:' + key),
+    set: (key: string, value: any) => ds.setItem('promptforge:' + key, value),
+    remove: (key: string) => ds.removeItem('promptforge:' + key),
+  }
+  return null
 }
 
-function getDbStorage() {
-  return (window as any).ztools?.dbStorage
-}
-
-/** 将 PromptUnit 转为 DB doc 格式 */
-function toDoc(unit: PromptUnit): PromptDoc {
-  return { _id: unit.id, data: JSON.parse(JSON.stringify(unit)) }
-}
-
-/** 将 DB doc 转为 PromptUnit */
-function fromDoc(doc: PromptDoc): PromptUnit {
-  return doc.data
-}
+const ALL_KEY = 'prompts'
 
 /** 加载所有提示词 */
 export async function loadAll(): Promise<PromptUnit[]> {
-  const db = getDb()
-  if (db) {
-    const docs = db.allDocs ? db.allDocs(DB_PREFIX) : []
-    const units: PromptUnit[] = []
-    for (const doc of docs) {
-      if (doc.data) units.push(doc.data)
-    }
-    return units.length > 0 ? units : seedDefaults()
-  }
-  // fallback: dbStorage
-  const ds = getDbStorage()
-  if (ds) {
-    const raw = ds.getItem(ALL_KEY)
+  const kv = getKv()
+  if (!kv) return seedDefaults()
+  try {
+    const raw = kv.get(ALL_KEY)
     if (Array.isArray(raw) && raw.length > 0) return raw
     const defaults = seedDefaults()
-    ds.setItem(ALL_KEY, defaults)
+    kv.set(ALL_KEY, defaults)
     return defaults
+  } catch {
+    return seedDefaults()
   }
-  return seedDefaults()
 }
 
 /** 保存所有提示词 */
 export async function saveAll(units: PromptUnit[]): Promise<void> {
-  const db = getDb()
-  if (db) {
-    for (const unit of units) {
-      const existing = db.get(unit.id)
-      if (existing) {
-        db.put({ ...existing, data: JSON.parse(JSON.stringify(unit)) })
-      } else {
-        db.put(toDoc(unit))
-      }
-    }
-    return
-  }
-  const ds = getDbStorage()
-  if (ds) ds.setItem(ALL_KEY, units)
+  const kv = getKv()
+  if (kv) kv.set(ALL_KEY, JSON.parse(JSON.stringify(units)))
 }
 
-/** 保存单个提示词 */
-export async function saveOne(unit: PromptUnit): Promise<void> {
-  const db = getDb()
-  if (db) {
-    const existing = db.get(unit.id)
-    if (existing) {
-      db.put({ ...existing, data: JSON.parse(JSON.stringify(unit)) })
-    } else {
-      db.put(toDoc(unit))
-    }
-    return
-  }
-  const ds = getDbStorage()
-  if (ds) {
-    const all = ds.getItem(ALL_KEY) || []
-    const idx = all.findIndex((u: PromptUnit) => u.id === unit.id)
-    if (idx !== -1) all[idx] = unit
-    else all.push(unit)
-    ds.setItem(ALL_KEY, all)
-  }
-}
-
-/** 删除提示词 */
-export async function removeOne(id: string): Promise<void> {
-  const db = getDb()
-  if (db) {
-    const existing = db.get(id)
-    if (existing) db.remove(existing)
-    return
-  }
-  const ds = getDbStorage()
-  if (ds) {
-    const all = ds.getItem(ALL_KEY) || []
-    ds.setItem(ALL_KEY, all.filter((u: PromptUnit) => u.id !== id))
-  }
-}
-
-/** 应用设置读写 */
+/** 保存设置 */
 export async function getSettings(): Promise<Record<string, any> | null> {
-  const ds = getDbStorage()
-  if (ds) return ds.getItem('promptforge:settings')
+  const kv = getKv()
+  if (kv) return kv.get('settings')
   return null
 }
 
 export async function setSettings(settings: Record<string, any>): Promise<void> {
-  const ds = getDbStorage()
-  if (ds) ds.setItem('promptforge:settings', settings)
+  const kv = getKv()
+  if (kv) kv.set('settings', settings)
 }
 
 /** 默认种子数据 */

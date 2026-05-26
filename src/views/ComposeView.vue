@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
@@ -228,7 +228,7 @@ async function saveAsNew() {
   height: 50px; flex-shrink: 0;
   display: grid; grid-template-columns: auto auto 1fr auto auto;
   align-items: center; gap: 12px; padding: 0 14px;
-  background: var(--pf-surface); border-bottom: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated); border-bottom: 1px solid var(--pf-border);
 }
 .back-btn, .new-btn, .more-btn { /* 同 LibraryView */ }
 .back-btn {
@@ -246,11 +246,11 @@ async function saveAsNew() {
   border: 0; background: transparent; color: var(--pf-text-muted);
   padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
 }
-.view-switcher button.active { background: var(--pf-primary); color: #fff; }
+.view-switcher button.active { background: var(--pf-accent); color: #fff; }
 .spacer { flex: 1; }
 .new-btn {
   width: 30px; height: 30px; border-radius: var(--pf-radius-sm);
-  border: 1px solid var(--pf-border); background: var(--pf-surface);
+  border: 1px solid var(--pf-border); background: var(--pf-bg-elevated);
   color: var(--pf-text-muted); font-size: 16px;
   display: flex; align-items: center; justify-content: center;
 }
@@ -275,21 +275,21 @@ async function saveAsNew() {
 }
 .col-search { padding: 0 12px 8px; }
 .col-search input {
-  height: 28px; border-radius: 6px; background: var(--pf-surface);
+  height: 28px; border-radius: 6px; background: var(--pf-bg-elevated);
   border: 1px solid var(--pf-border); padding: 0 10px; font-size: 12px; outline: none;
   width: 100%;
 }
-.col-search input:focus { border-color: var(--pf-primary); }
+.col-search input:focus { border-color: var(--pf-accent); }
 .col-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 10px; }
 
 .mini-card {
   padding: 8px 10px; border-radius: var(--pf-radius-sm);
-  background: var(--pf-surface); border: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated); border: 1px solid var(--pf-border);
   cursor: pointer; margin-bottom: 5px;
   transition: border-color 0.12s;
 }
-.mini-card:hover { border-color: var(--pf-primary); }
-.mini-card.active { border-color: var(--pf-primary); background: var(--pf-primary-soft); }
+.mini-card:hover { border-color: var(--pf-accent); }
+.mini-card.active { border-color: var(--pf-accent); background: var(--pf-accent-soft); }
 .card-title {
   font-size: 12px; font-weight: 600; color: var(--pf-text);
   margin-bottom: 2px; display: flex; align-items: center; justify-content: space-between;
@@ -299,18 +299,18 @@ async function saveAsNew() {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .add-icon { font-size: 13px; color: var(--pf-text-faint); }
-.mini-card:hover .add-icon { color: var(--pf-primary); }
+.mini-card:hover .add-icon { color: var(--pf-accent); }
 
 .canvas-col {
   background: var(--pf-bg); overflow-y: auto;
   padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
 }
 .canvas-card {
-  background: var(--pf-surface); border: 1px solid var(--pf-border);
+  background: var(--pf-bg-elevated); border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius-sm); padding: 10px 12px; flex-shrink: 0;
 }
-.canvas-card.muted { background: var(--pf-surface-raised); border-style: dashed; }
-.canvas-card.preview { border-color: var(--pf-primary); }
+.canvas-card.muted { background: var(--pf-surface); border-style: dashed; }
+.canvas-card.preview { border-color: var(--pf-accent); }
 .card-head {
   display: flex; align-items: center; gap: 6px;
   font-size: 10.5px; color: var(--pf-text-muted); font-weight: 600;
@@ -337,14 +337,14 @@ async function saveAsNew() {
 }
 .var-tag {
   display: inline-flex; align-items: center; gap: 4px;
-  background: var(--pf-primary-soft); color: var(--pf-primary);
+  background: var(--pf-accent-soft); color: var(--pf-accent);
   padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
 }
 .var-tag input {
   width: 80px; border: 0; border-bottom: 1px solid var(--pf-border);
   outline: 0; background: transparent; font-size: 11px;
 }
-.var-tag input:focus { border-bottom-color: var(--pf-primary); }
+.var-tag input:focus { border-bottom-color: var(--pf-accent); }
 
 .compose-footer {
   height: 48px; flex-shrink: 0;

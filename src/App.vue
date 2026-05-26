@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from './stores/router'
 import { usePromptStore } from './stores/prompt'
 import { useAppSettings } from './stores/app'
+import { useTheme } from './stores/theme'
 import CallView from './views/CallView.vue'
 import WizardView from './views/WizardView.vue'
 import LibraryView from './views/LibraryView.vue'
@@ -13,11 +14,13 @@ import SettingsView from './views/SettingsView.vue'
 const router = useRouter()
 const promptStore = usePromptStore()
 const appSettings = useAppSettings()
+const themeStore = useTheme()
 const ready = ref(false)
 
 onMounted(async () => {
   await promptStore.ensureReady()
   await appSettings.load()
+  await themeStore.init()
   ready.value = true
 
   const ztools = (window as any).ztools
@@ -49,11 +52,6 @@ const viewMap: Record<string, any> = {
   settings: SettingsView,
 }
 
-const currentView = ref('call')
-router.currentRoute.value // 初始触发响应
-
-// 使用 computed 而非 watch，以实时响应路由变化
-import { computed } from 'vue'
 const activeComponent = computed(() => viewMap[router.currentRoute.value] || CallView)
 </script>
 
@@ -63,28 +61,35 @@ const activeComponent = computed(() => viewMap[router.currentRoute.value] || Cal
       <component :is="activeComponent" />
     </template>
     <div v-else class="loading">
-      <span class="loading-text">PromptForge 加载中…</span>
+      <div class="loading-spinner"></div>
+      <span>PromptForge</span>
     </div>
   </div>
 </template>
 
 <style scoped>
 .app-shell {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   background: var(--pf-bg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .loading {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.loading-text {
-  font-size: 13px;
+  flex: 1; display: flex;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
   color: var(--pf-text-muted);
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.02em;
 }
+.loading-spinner {
+  width: 24px; height: 24px;
+  border: 2.5px solid var(--pf-border);
+  border-top-color: var(--pf-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
