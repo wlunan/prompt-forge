@@ -5,7 +5,6 @@ import { usePromptStore } from '../stores/prompt'
 import { useAppSettings } from '../stores/app'
 import { copyText, showNotification, hideMainWindow } from '../utils/platform'
 import { renderVariables } from '../utils/index'
-import CommandBar from '../components/CommandBar.vue'
 import PromptList from '../components/PromptList.vue'
 import FillPanel from '../components/FillPanel.vue'
 
@@ -109,7 +108,6 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
 <template>
   <div class="call-view">
-    <CommandBar />
     <div class="call-body">
       <template v-if="prompt.phase.value === 'search'">
         <PromptList
@@ -132,23 +130,17 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
       </template>
     </div>
     <footer class="call-footer">
-      <span class="status">
-        <span v-if="prompt.phase.value === 'search'" class="status-text">
-          {{ prompt.filteredItems.value.length }} 条提示词
-        </span>
-        <span v-else class="status-text">
-          填写完成后按 Enter 复制
-        </span>
+      <span class="status-text">
+        {{ prompt.phase.value === 'search'
+          ? prompt.filteredItems.value.length + ' 条提示词'
+          : '填写完成后按 Enter 复制' }}
       </span>
       <div class="keys">
         <template v-if="prompt.phase.value === 'search'">
-          <kbd>↑</kbd><kbd>↓</kbd> 选择
-          <kbd>Enter</kbd> 复制
-          <kbd>E</kbd> 编辑
+          <kbd>↑</kbd><kbd>↓</kbd> 选择 <kbd>Enter</kbd> 复制 <kbd>E</kbd> 编辑
         </template>
         <template v-else>
-          <kbd>Tab</kbd> 切换
-          <kbd>Esc</kbd> 返回
+          <kbd>Tab</kbd> 切换 <kbd>Esc</kbd> 返回
         </template>
       </div>
     </footer>
@@ -161,36 +153,27 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
   display: flex; flex-direction: column;
   background: var(--pf-bg);
   user-select: none; overflow: hidden;
+  flex: 1; min-height: 0;
 }
 .call-body {
   flex: 1; min-height: 0; overflow: hidden;
   display: flex; flex-direction: column;
 }
 .call-footer {
-  height: 36px; flex-shrink: 0;
+  height: 34px; flex-shrink: 0;
   border-top: 1px solid var(--pf-border);
   background: var(--pf-bg-elevated);
   display: flex; align-items: center;
   padding: 0 20px; gap: 16px;
   font-size: 12px;
-  transition: background 0.3s, border-color 0.3s;
 }
-.status { flex: 1; }
-.status-text { color: var(--pf-text-muted); }
-.keys {
-  display: flex; gap: 4px; align-items: center;
-  font-size: 11px; color: var(--pf-text-faint);
-}
+.status-text { color: var(--pf-text-muted); flex: 1; }
+.keys { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--pf-text-faint); }
 .keys kbd {
   font: 9px/1 var(--pf-font-mono);
   background: var(--pf-surface-raised);
   border: 1px solid var(--pf-border);
-  border-radius: 3px;
-  padding: 1px 4px;
+  border-radius: 3px; padding: 1px 4px;
   color: var(--pf-text-muted);
-  min-width: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

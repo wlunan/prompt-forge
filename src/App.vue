@@ -4,6 +4,7 @@ import { useRouter } from './stores/router'
 import { usePromptStore } from './stores/prompt'
 import { useAppSettings } from './stores/app'
 import { useTheme } from './stores/theme'
+import CommandBar from './components/CommandBar.vue'
 import CallView from './views/CallView.vue'
 import WizardView from './views/WizardView.vue'
 import LibraryView from './views/LibraryView.vue'
@@ -58,6 +59,7 @@ const activeComponent = computed(() => viewMap[router.currentRoute.value] || Cal
 <template>
   <div class="app-shell">
     <template v-if="ready">
+      <CommandBar />
       <component :is="activeComponent" />
     </template>
     <div v-else class="loading">
@@ -82,7 +84,6 @@ const activeComponent = computed(() => viewMap[router.currentRoute.value] || Cal
   gap: 12px;
   color: var(--pf-text-muted);
   font-size: 14px; font-weight: 600;
-  letter-spacing: 0.02em;
 }
 .loading-spinner {
   width: 24px; height: 24px;
