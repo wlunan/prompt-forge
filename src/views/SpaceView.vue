@@ -145,7 +145,6 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
           </svg>
           新建
         </button>
-        <button class="btn icon-sm topbar-icon" title="设置" @click="router.navigateTo('settings')">⚙</button>
       </div>
 
       <!-- 项目 tab：左列项目列表 + 右列提示词 -->
@@ -190,16 +189,19 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
                 @select="(i: number) => { prompt.keyboardIndex.value = i }"
                 @activate="prompt.selectActive()"
                 @enter-wizard="router.enterWizard(prompt.query.value.trim())"
+                @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
               />
             </template>
             <template v-else>
-              <FillPanel
-                :unit="prompt.selectedPrompt.value"
-                :values="prompt.variableValues.value"
-                @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
-                @submit="handleCopy"
-                @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
-              />
+              <div class="fill-container">
+                <FillPanel
+                  :unit="prompt.selectedPrompt.value"
+                  :values="prompt.variableValues.value"
+                  @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
+                  @submit="handleCopy"
+                  @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
+                />
+              </div>
             </template>
           </div>
         </div>
@@ -232,16 +234,19 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
             @select="(i: number) => { prompt.keyboardIndex.value = i }"
             @activate="prompt.selectActive()"
             @enter-wizard="router.enterWizard(prompt.query.value.trim())"
+            @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
           />
         </template>
         <template v-else>
-          <FillPanel
-            :unit="prompt.selectedPrompt.value"
-            :values="prompt.variableValues.value"
-            @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
-            @submit="handleCopy"
-            @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
-          />
+          <div class="fill-container">
+            <FillPanel
+              :unit="prompt.selectedPrompt.value"
+              :values="prompt.variableValues.value"
+              @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
+              @submit="handleCopy"
+              @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
+            />
+          </div>
         </template>
       </template>
     </div>
@@ -294,6 +299,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
 /* 主区域 */
 .space-main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.fill-container { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 /* 顶栏 */
 .space-topbar {
@@ -301,6 +307,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
   padding: 8px 16px; flex-shrink: 0;
   border-bottom: 1px solid var(--pf-border);
   background: var(--pf-bg-elevated);
+  height: 48px;
 }
 .topbar-search {
   flex: 1; height: 32px;

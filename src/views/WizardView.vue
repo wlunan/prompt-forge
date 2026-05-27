@@ -80,7 +80,7 @@ async function save(type?: 'prompt' | 'snippet' | 'template' | 'constraint') {
         <div class="field"><label>标签 <span class="hi">逗号分隔</span></label><input v-model="tagsRaw" placeholder="PRD, 评审" /></div>
         <div class="field"><label>类型</label>
           <div class="type-grid">
-            <button v-for="t in [{v:'prompt',l:'提示词'},{v:'snippet',l:'片段'},{v:'template',l:'模板'},{v:'constraint',l:'约束'}]"
+            <button v-for="t in [{v:'prompt',l:'提示词'},{v:'snippet',l:'片段'},{v:'template',l:'模板'},{v:'constraint',l:'约束'}] as const"
               :key="t.v" :class="['type-btn', { active: selectedType === t.v }]" @click="selectedType = t.v">{{ t.l }}</button>
           </div>
         </div>

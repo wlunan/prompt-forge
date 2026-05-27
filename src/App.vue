@@ -56,7 +56,9 @@ const activeComponent = computed(() => viewMap[router.currentView.value] || Spac
   <div class="app-shell">
     <template v-if="ready">
       <CommandBar />
-      <component :is="activeComponent" />
+      <div class="view-container">
+        <component :is="activeComponent" />
+      </div>
     </template>
     <div v-else class="loading">
       <div class="loading-spinner"></div>
@@ -72,6 +74,10 @@ const activeComponent = computed(() => viewMap[router.currentView.value] || Spac
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+.view-container {
+  flex: 1; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
 }
 .loading {
   flex: 1; display: flex;

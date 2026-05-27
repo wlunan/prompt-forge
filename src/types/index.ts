@@ -33,6 +33,7 @@ export interface PromptItem {
   snapshots: Snapshot[]
   createdAt: number
   updatedAt: number
+  lastUsedAt?: number
 }
 
 /** 项目 */

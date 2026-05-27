@@ -13,6 +13,7 @@ const emit = defineEmits<{
   (e: 'select', index: number): void
   (e: 'activate'): void
   (e: 'enterWizard'): void
+  (e: 'toggleFavorite', id: string): void
 }>()
 
 const prompt = usePromptStore()
@@ -40,7 +41,9 @@ function timeAgo(dateVal?: string | number): string {
         @click="emit('select', index); emit('activate')"
       >
         <div class="card-left">
-          <div :class="['dot', { fav: item.favorite }]"></div>
+          <button :class="['dot', { fav: item.favorite }]" @click.stop="emit('toggleFavorite', item.id)">
+            {{ item.favorite ? '★' : '☆' }}
+          </button>
         </div>
         <div class="card-body">
           <div class="card-title">{{ item.title }}</div>
@@ -103,10 +106,14 @@ function timeAgo(dateVal?: string | number): string {
 }
 .card-left { flex-shrink: 0; }
 .dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--pf-text-faint);
+  width: 20px; height: 20px; border-radius: 50%;
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--pf-text-faint);
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s;
 }
-.dot.fav { background: var(--pf-warning); }
+.dot:hover { color: var(--pf-warning); }
+.dot.fav { color: var(--pf-warning); }
 .card-body { flex: 1; min-width: 0; }
 .card-title {
   font-size: 14px; font-weight: 600;

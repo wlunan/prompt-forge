@@ -83,15 +83,17 @@ function updateValue(name: string, value: string) {
 
 <style scoped>
 .fill-wrap {
-  flex: 1; min-height: 0;
+  flex: 1; min-height: 0; height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(200px, 1fr) 2fr;
+  grid-template-rows: 1fr;
   overflow: hidden;
 }
 
 /* 左侧表单 */
 .fill-form {
   display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
   border-right: 1px solid var(--pf-border);
   background: var(--pf-bg);
 }
@@ -152,6 +154,8 @@ function updateValue(name: string, value: string) {
   height: 120px; font-size: 14px; color: var(--pf-text-muted);
 }
 .form-actions {
+  flex-shrink: 0;
+  height: 52px; min-height: 52px;
   padding: 12px 20px;
   display: flex; align-items: center; gap: 10px;
   border-top: 1px solid var(--pf-border);
@@ -162,6 +166,7 @@ function updateValue(name: string, value: string) {
 /* 右侧预览 */
 .fill-preview {
   display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
   background: var(--pf-bg-elevated);
 }
 .preview-header {

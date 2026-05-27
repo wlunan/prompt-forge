@@ -18,7 +18,7 @@ const theme = useTheme()
         ]"
         :key="item.key"
         :class="['nav-btn', { active: router.currentView.value === item.key }]"
-        @click="router.navigateTo(item.key)"
+        @click="router.navigateTo(item.key as any)"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path :d="item.icon" />
