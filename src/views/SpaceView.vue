@@ -193,15 +193,13 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
               />
             </template>
             <template v-else>
-              <div class="fill-container">
-                <FillPanel
-                  :unit="prompt.selectedPrompt.value"
-                  :values="prompt.variableValues.value"
-                  @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
-                  @submit="handleCopy"
-                  @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
-                />
-              </div>
+              <FillPanel
+                :unit="prompt.selectedPrompt.value"
+                :values="prompt.variableValues.value"
+                @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
+                @submit="handleCopy"
+                @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
+              />
             </template>
           </div>
         </div>
@@ -238,15 +236,13 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
           />
         </template>
         <template v-else>
-          <div class="fill-container">
-            <FillPanel
-              :unit="prompt.selectedPrompt.value"
-              :values="prompt.variableValues.value"
-              @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
-              @submit="handleCopy"
-              @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
-            />
-          </div>
+          <FillPanel
+            :unit="prompt.selectedPrompt.value"
+            :values="prompt.variableValues.value"
+            @update:values="(v: Record<string, string>) => prompt.variableValues.value = v"
+            @submit="handleCopy"
+            @cancel="prompt.phase.value = 'search'; prompt.selectedPrompt.value = null"
+          />
         </template>
       </template>
     </div>
@@ -299,7 +295,6 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
 /* 主区域 */
 .space-main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
-.fill-container { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 /* 顶栏 */
 .space-topbar {

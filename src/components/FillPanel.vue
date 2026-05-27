@@ -30,63 +30,70 @@ function updateValue(name: string, value: string) {
 
 <template>
   <div class="fill-wrap">
-    <!-- 左：变量表单 -->
-    <div class="fill-form">
-      <div class="form-header">
-        <span class="form-title">填写变量</span>
-        <span v-if="variables.length > 0" class="form-count">
-          {{ variables.length - missingCount }}/{{ variables.length }}
-        </span>
-      </div>
-      <div class="form-scroll">
-        <div v-if="variables.length > 0" class="var-form">
-          <div v-for="v in variables" :key="v.name" class="field">
-            <label>
-              {{ v.name }}
-              <span v-if="v.required" class="req">*</span>
-              <span class="hint">{{ v.required ? '必填' : '可选' }}</span>
-            </label>
-            <input
-              :value="values[v.name]"
-              type="text"
-              :placeholder="v.defaultValue ? `默认: ${v.defaultValue}` : '请输入…'"
-              @input="updateValue(v.name, ($event.target as HTMLInputElement).value)"
-            />
-          </div>
+    <div class="fill-body">
+      <!-- 左：变量表单 -->
+      <div class="fill-form">
+        <div class="form-header">
+          <span class="form-title">填写变量</span>
+          <span v-if="variables.length > 0" class="form-count">
+            {{ variables.length - missingCount }}/{{ variables.length }}
+          </span>
         </div>
-        <div v-else class="no-vars">无需变量</div>
+        <div class="form-scroll">
+          <div v-if="variables.length > 0" class="var-form">
+            <div v-for="v in variables" :key="v.name" class="field">
+              <label>
+                {{ v.name }}
+                <span v-if="v.required" class="req">*</span>
+                <span class="hint">{{ v.required ? '必填' : '可选' }}</span>
+              </label>
+              <input
+                :value="values[v.name]"
+                type="text"
+                :placeholder="v.defaultValue ? `默认: ${v.defaultValue}` : '请输入…'"
+                @input="updateValue(v.name, ($event.target as HTMLInputElement).value)"
+              />
+            </div>
+          </div>
+          <div v-else class="no-vars">无需变量</div>
+        </div>
       </div>
-      <div class="form-actions">
-        <button class="btn" @click="emit('cancel')"><kbd>Esc</kbd> 返回</button>
-        <span class="spacer"></span>
-        <button class="btn primary" @click="emit('submit')">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>
-          复制
-        </button>
+
+      <!-- 右：正文预览 -->
+      <div class="fill-preview">
+        <div class="preview-header">
+          <span class="preview-title">{{ unit?.title || '提示词预览' }}</span>
+          <span class="preview-meta">
+            <span v-if="unit?.tags?.length" class="tag" v-for="t in unit.tags.slice(0,3)" :key="t">#{{ t }}</span>
+          </span>
+        </div>
+        <div class="preview-body">{{ preview }}</div>
       </div>
     </div>
-
-    <!-- 右：正文预览 -->
-    <div class="fill-preview">
-      <div class="preview-header">
-        <span class="preview-title">{{ unit?.title || '提示词预览' }}</span>
-        <span class="preview-meta">
-          <span v-if="unit?.tags?.length" class="tag" v-for="t in unit.tags.slice(0,3)" :key="t">#{{ t }}</span>
-        </span>
-      </div>
-      <div class="preview-body">{{ preview }}</div>
+    <!-- 底栏：固定在底部 -->
+    <div class="form-actions">
+      <button class="btn" @click="emit('cancel')"><kbd>Esc</kbd> 返回</button>
+      <span class="spacer"></span>
+      <button class="btn primary" @click="emit('submit')">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+        复制
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .fill-wrap {
-  flex: 1; min-height: 0; height: 100%;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.fill-body {
+  flex: 1; min-height: 0;
   display: grid;
   grid-template-columns: minmax(200px, 1fr) 2fr;
-  grid-template-rows: 1fr;
   overflow: hidden;
 }
 
@@ -154,12 +161,12 @@ function updateValue(name: string, value: string) {
   height: 120px; font-size: 14px; color: var(--pf-text-muted);
 }
 .form-actions {
-  flex-shrink: 0;
   height: 52px; min-height: 52px;
   padding: 12px 20px;
   display: flex; align-items: center; gap: 10px;
   border-top: 1px solid var(--pf-border);
   background: var(--pf-bg-elevated);
+  flex-shrink: 0;
 }
 .spacer { flex: 1; }
 
@@ -170,6 +177,7 @@ function updateValue(name: string, value: string) {
   background: var(--pf-bg-elevated);
 }
 .preview-header {
+  flex-shrink: 0;
   padding: 14px 20px 10px;
   display: flex; align-items: center; gap: 12px;
   border-bottom: 1px solid var(--pf-border);
