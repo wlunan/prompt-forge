@@ -37,7 +37,7 @@ export function fnvHash(str: string): string {
   return hash.toString(16).padStart(16, '0').slice(0, 16)
 }
 
-/** 二元组相似度（bigram） */
+/** 二元组相似度 */
 function bigramSimilarity(a: string, b: string): number {
   const getBigrams = (s: string) => {
     const lower = s.toLowerCase().replace(/\s+/g, '')
@@ -55,57 +55,35 @@ function bigramSimilarity(a: string, b: string): number {
 
 /** 生成 UUID */
 export function generateId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
 /** 自动从正文推断标题 */
 export function inferTitle(body: string): string {
-  if (!body) return '未命名提示词'
+  if (!body) return '未命名'
   const lines = body.split('\n')
   let firstLine = ''
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (trimmed) { firstLine = trimmed; break }
-  }
-  if (!firstLine) return '未命名提示词'
-  let title = firstLine.replace(/^#+\s*/, '').trim()
-  title = title.replace(/\s+/g, ' ')
-  if (/[\u4e00-\u9fa5]/.test(title)) {
-    return title.length > 7 ? title.slice(0, 7) + '…' : title
-  }
+  for (const line of lines) { const t = line.trim(); if (t) { firstLine = t; break } }
+  if (!firstLine) return '未命名'
+  let title = firstLine.replace(/^#+\s*/, '').trim().replace(/\s+/g, ' ')
+  if (/[\u4e00-\u9fa5]/.test(title)) return title.length > 7 ? title.slice(0, 7) + '…' : title
   return title.length > 15 ? title.slice(0, 15) + '…' : title
-}
-
-/** 自动推断分类 */
-export function inferCategory(body: string): string {
-  const lower = body.toLowerCase()
-  if (lower.includes('评审') || lower.includes('review')) return '评审'
-  if (lower.includes('代码') || lower.includes('code') || lower.includes('bug')) return '编码'
-  if (lower.includes('翻译') || lower.includes('translate')) return '翻译'
-  if (lower.includes('周报') || lower.includes('写作') || lower.includes('write')) return '写作'
-  if (lower.includes('问') || lower.includes('ask') || lower.includes('解释')) return '问答'
-  return '其它'
 }
 
 /** 检测重复 */
 export async function detectDuplicate(
-  existing: Array<{ body: string; id: string; [k: string]: any }>,
-  newBody: string,
+  existing: Array<{ content: string; id: string }>,
+  newContent: string,
   newId: string
 ): Promise<{ phase: 'normal' | 'exact' | 'similar'; exactId?: string; similarItems: Array<{ id: string; score: number }> }> {
-  const start = Date.now()
-  const newHash = fnvHash(newBody)
+  const newHash = fnvHash(newContent)
   const exact = existing.find(e => e.id !== newId && (e as any).hash === newHash)
   if (exact) return { phase: 'exact', exactId: exact.id, similarItems: [] }
-
   const similar: Array<{ id: string; score: number }> = []
   for (const item of existing) {
     if (item.id === newId) continue
-    if (Date.now() - start > 500) break
-    const score = bigramSimilarity(newBody, item.body)
+    const score = bigramSimilarity(newContent, item.content)
     if (score >= 0.8) similar.push({ id: item.id, score })
   }
   similar.sort((a, b) => b.score - a.score)

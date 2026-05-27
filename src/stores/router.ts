@@ -1,25 +1,22 @@
 import { ref } from 'vue'
+import { usePromptStore } from './prompt'
 
 /** 路由状态 */
-const currentRoute = ref('call')
+const currentView = ref<'space' | 'wizard' | 'compose' | 'manage' | 'quick-save' | 'settings'>('space')
+const wizardPrefillTitle = ref('')
 const quickSaveContent = ref('')
 const quickSaveSource = ref<string>('manual')
-const wizardPrefillTitle = ref('')
 
 export function useRouter() {
-  function navigateTo(route: string) {
-    currentRoute.value = route
-  }
-
-  function enterQuickSave(content: string, source: string) {
-    quickSaveContent.value = content
-    quickSaveSource.value = source
-    currentRoute.value = 'quick-save'
+  function navigateTo(view: 'space' | 'wizard' | 'compose' | 'manage' | 'quick-save' | 'settings') {
+    const prompt = usePromptStore()
+    prompt.resetSelection()
+    currentView.value = view
   }
 
   function enterWizard(prefillTitle = '') {
     wizardPrefillTitle.value = prefillTitle
-    currentRoute.value = 'wizard'
+    currentView.value = 'wizard'
   }
 
   function consumeWizardPrefill() {
@@ -28,14 +25,20 @@ export function useRouter() {
     return val
   }
 
+  function enterQuickSave(content: string, source: string) {
+    quickSaveContent.value = content
+    quickSaveSource.value = source
+    currentView.value = 'quick-save'
+  }
+
   return {
-    currentRoute,
+    currentView,
+    wizardPrefillTitle,
     quickSaveContent,
     quickSaveSource,
-    wizardPrefillTitle,
     navigateTo,
-    enterQuickSave,
     enterWizard,
     consumeWizardPrefill,
+    enterQuickSave,
   }
 }

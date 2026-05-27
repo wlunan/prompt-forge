@@ -1,103 +1,110 @@
 import { ref, computed } from 'vue'
-import type { PromptUnit, SearchResult } from '../types'
-import { loadAll, saveAll } from '../utils/storage'
-import { fnvHash } from '../utils/index'
+import type { PromptItem } from '../types'
+import { loadPrompts, savePrompts } from '../utils/storage'
 
-const rawItems = ref<PromptUnit[]>([])
+const rawItems = ref<PromptItem[]>([])
 const isLoading = ref(false)
-
-/** 简易搜索引擎 */
-function search(items: PromptUnit[], query: string): SearchResult[] {
-  if (!query.trim()) return items.map(item => ({ item, score: 0 }))
-  const lower = query.toLowerCase().trim()
-  const results: SearchResult[] = []
-  for (const item of items) {
-    let score = 0
-    const title = item.title.toLowerCase()
-    const body = item.body.toLowerCase()
-    if (title === lower) score += 100
-    else if (title.startsWith(lower)) score += 50
-    else if (title.includes(lower)) score += 30
-    for (const tag of item.tags) {
-      const tl = tag.toLowerCase()
-      if (tl === lower) score += 40
-      else if (tl.includes(lower)) score += 20
-    }
-    if (body.includes(lower)) score += 5
-    if (score > 0) results.push({ item, score })
-  }
-  return results
-}
+let _initPromise: Promise<void> | null = null
 
 export function usePromptStore() {
+  // 筛选状态
+  const spaceTab = ref<'recent' | 'favorite' | 'project' | 'asset' | 'trash'>('recent')
   const query = ref('')
-  const phase = ref<'search' | 'fill'>('search')
-  const keyboardIndex = ref(0)
-  const selectedUnit = ref<PromptUnit | null>(null)
-  const variableValues = ref<Record<string, string>>({})
-  const filterCategory = ref('全部')
   const filterTag = ref('')
-  let _initPromise: Promise<void> | null = null
+  const filterProjectId = ref('')
+  const activePromptId = ref('')
 
-  /** 排序规则：收藏 > 最近使用 > 使用次数 > 更新时间 */
-  const sortedItems = computed(() => {
-    return [...rawItems.value].sort((a, b) => {
-      const fa = a.favorited ? 1 : 0
-      const fb = b.favorited ? 1 : 0
-      if (fa !== fb) return fb - fa
-      const la = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0
-      const lb = b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0
-      if (la !== lb) return lb - la
-      if (a.usageCount !== b.usageCount) return b.usageCount - a.usageCount
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    })
-  })
+  // 调用阶段
+  const phase = ref<'search' | 'fill'>('search')
+  const selectedPrompt = ref<PromptItem | null>(null)
+  const variableValues = ref<Record<string, string>>({})
+  const keyboardIndex = ref(0)
 
-  const filteredItems = computed(() => {
-    let items = query.value.trim()
-      ? search(sortedItems.value, query.value).sort((a, b) => b.score - a.score).map(r => r.item)
-      : sortedItems.value
-    if (filterCategory.value && filterCategory.value !== '全部') {
-      items = items.filter(u => (u.category || '其它') === filterCategory.value)
+  /** 不含已删除项 */
+  const liveItems = computed(() => rawItems.value.filter(i => !i.deleted))
+
+  /** 最近使用（按 lastUsedAt 降序） */
+  const recentItems = computed(() =>
+    [...liveItems.value]
+      .filter(i => i.lastUsedAt)
+      .sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0))
+      .slice(0, 20)
+  )
+
+  /** 收藏 */
+  const favoriteItems = computed(() => liveItems.value.filter(i => i.favorite))
+
+  /** 资产（prompt + snippet + template + constraint，不在项目中） */
+  const assetItems = computed(() => liveItems.value.filter(i => !i.projectId))
+
+  /** 回收站 */
+  const trashItems = computed(() => rawItems.value.filter(i => i.deleted))
+
+  /** 当前空间页显示的列表 */
+  const spaceItems = computed(() => {
+    let items: PromptItem[]
+    switch (spaceTab.value) {
+      case 'recent': items = recentItems.value; break
+      case 'favorite': items = favoriteItems.value; break
+      case 'project': items = filterProjectId.value
+        ? liveItems.value.filter(i => i.projectId === filterProjectId.value)
+        : liveItems.value.filter(i => i.projectId)
+        break
+      case 'asset': items = assetItems.value; break
+      case 'trash': items = trashItems.value; break
+      default: items = liveItems.value
     }
-    if (filterTag.value) {
-      items = items.filter(u => u.tags.some(t => t === filterTag.value))
-    }
+    // 标签筛选
+    if (filterTag.value) items = items.filter(i => i.tags.includes(filterTag.value))
     return items
   })
 
-  const activeItem = computed(() => {
-    if (filteredItems.value.length === 0) return null
-    return filteredItems.value[keyboardIndex.value] || filteredItems.value[0]
+  /** 所有标签 */
+  const allTags = computed(() => {
+    const set = new Set<string>()
+    for (const i of liveItems.value) for (const t of i.tags) set.add(t)
+    return [...set].sort()
   })
 
+  // ====== 调用阶段的搜索结果 ======
+  const filteredCallItems = computed(() => {
+    if (!query.value.trim()) return spaceItems.value
+    const q = query.value.toLowerCase()
+    return spaceItems.value.filter(i =>
+      i.title.toLowerCase().includes(q) ||
+      i.content.toLowerCase().includes(q) ||
+      i.tags.some(t => t.toLowerCase().includes(q))
+    )
+  })
+
+  const activeItem = computed(() => {
+    if (filteredCallItems.value.length === 0) return null
+    return filteredCallItems.value[keyboardIndex.value] || filteredCallItems.value[0]
+  })
+
+  // ====== 操作 ======
+
   function moveSelection(dir: 'up' | 'down') {
-    if (filteredItems.value.length === 0) return
-    if (dir === 'down') {
-      if (keyboardIndex.value < filteredItems.value.length - 1) keyboardIndex.value++
-    } else {
-      if (keyboardIndex.value > 0) keyboardIndex.value--
-    }
+    const items = filteredCallItems.value
+    if (!items.length) return
+    if (dir === 'down') { if (keyboardIndex.value < items.length - 1) keyboardIndex.value++ }
+    else { if (keyboardIndex.value > 0) keyboardIndex.value-- }
   }
 
   function selectActive() {
-    if (!activeItem.value) return
-    selectedUnit.value = activeItem.value
+    const item = activeItem.value
+    if (!item) return
+    selectedPrompt.value = item
     phase.value = 'fill'
-    // 初始化变量值
     variableValues.value = {}
-    if (activeItem.value.variables) {
-      for (const v of activeItem.value.variables) {
-        variableValues.value[v.name] = v.defaultValue || ''
-      }
-    }
+    if (item.variables) for (const v of item.variables) variableValues.value[v.name] = v.defaultValue || ''
   }
 
   function resetSelection() {
     query.value = ''
     phase.value = 'search'
     keyboardIndex.value = 0
-    selectedUnit.value = null
+    selectedPrompt.value = null
     variableValues.value = {}
   }
 
@@ -105,48 +112,67 @@ export function usePromptStore() {
     if (_initPromise) return _initPromise
     _initPromise = (async () => {
       isLoading.value = true
-      rawItems.value = await loadAll()
+      rawItems.value = await loadPrompts()
       isLoading.value = false
     })()
     return _initPromise
   }
 
-  async function ensureReady() {
-    await init()
-  }
+  async function ensureReady() { await init() }
 
-  async function persistAll() {
-    await saveAll(rawItems.value)
-  }
+  async function persistAll() { await savePrompts(rawItems.value) }
 
   async function recordUsage(id: string) {
-    const item = rawItems.value.find(u => u.id === id)
+    const item = rawItems.value.find(i => i.id === id)
     if (item) {
       item.usageCount = (item.usageCount || 0) + 1
-      item.lastUsedAt = new Date().toISOString()
+      item.lastUsedAt = Date.now()
       await persistAll()
     }
   }
 
+  function toggleFavorite(id: string) {
+    const item = rawItems.value.find(i => i.id === id)
+    if (item) { item.favorite = !item.favorite; persistAll() }
+  }
+
+  function softDelete(id: string) {
+    const item = rawItems.value.find(i => i.id === id)
+    if (item) { item.deleted = true; item.updatedAt = Date.now(); persistAll() }
+  }
+
+  function restore(id: string) {
+    const item = rawItems.value.find(i => i.id === id)
+    if (item) { item.deleted = false; item.updatedAt = Date.now(); persistAll() }
+  }
+
+  function hardDelete(id: string) {
+    rawItems.value = rawItems.value.filter(i => i.id !== id)
+    persistAll()
+  }
+
+  function addItem(item: PromptItem) {
+    rawItems.value.push(item)
+    persistAll()
+  }
+
+  function updateItem(id: string, patch: Partial<PromptItem>) {
+    const idx = rawItems.value.findIndex(i => i.id === id)
+    if (idx !== -1) {
+      rawItems.value[idx] = { ...rawItems.value[idx], ...patch, updatedAt: Date.now() }
+      persistAll()
+    }
+  }
+
   return {
-    rawItems,
-    isLoading,
-    query,
-    phase,
-    keyboardIndex,
-    selectedUnit,
-    variableValues,
-    filterCategory,
-    filterTag,
-    filteredItems,
-    sortedItems,
-    activeItem,
-    moveSelection,
-    selectActive,
-    resetSelection,
-    init,
-    ensureReady,
-    persistAll,
-    recordUsage,
+    rawItems, isLoading,
+    spaceTab, query, filterTag, filterProjectId, activePromptId,
+    phase, selectedPrompt, variableValues, keyboardIndex,
+    liveItems, recentItems, favoriteItems, assetItems, trashItems,
+    spaceItems, allTags, filteredCallItems, activeItem,
+    moveSelection, selectActive, resetSelection,
+    init, ensureReady, persistAll, recordUsage,
+    toggleFavorite, softDelete, restore, hardDelete,
+    addItem, updateItem,
   }
 }

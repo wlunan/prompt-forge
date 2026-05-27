@@ -10,47 +10,52 @@ export interface Snapshot {
   version: number
   body: string
   note: string
-  createdAt: string
+  createdAt: number
 }
+
+/** 提示词类型 */
+export type PromptType = 'prompt' | 'snippet' | 'template' | 'constraint'
 
 /** 提示词单元 */
-export interface PromptUnit {
+export interface PromptItem {
   id: string
   title: string
-  type: 'prompt' | 'fragment'
-  status: 'active' | 'draft' | 'archived'
-  category: string
+  description?: string
+  content: string
+  type: PromptType
   tags: string[]
-  body: string
   variables: Variable[]
-  version: number
+  favorite: boolean
   usageCount: number
-  favorited: boolean
+  projectId?: string
+  deleted?: boolean
+  version: number
   snapshots: Snapshot[]
-  createdAt: string
-  updatedAt: string
-  lastUsedAt?: string
+  createdAt: number
+  updatedAt: number
 }
 
-/** DB 文档格式（带 _id/_rev） */
-export interface PromptDoc {
-  _id: string
-  _rev?: string
-  data: PromptUnit
-}
+/** 项目 */
+export type ProjectGroup = '开发' | '学习' | '写作' | '研究' | '其他'
 
-/** 导入/导出格式 */
-export type PromptLibrary = PromptUnit[]
+export interface Project {
+  id: string
+  name: string
+  group: ProjectGroup
+  description?: string
+  createdAt: number
+  updatedAt: number
+}
 
 /** 搜索结果 */
 export interface SearchResult {
-  item: PromptUnit
+  item: PromptItem
   score: number
 }
 
-/** 重复检测结果 */
-export interface DuplicateResult {
-  phase: 'normal' | 'exact' | 'similar'
-  exact?: PromptUnit
-  similar: Array<{ item: PromptUnit; score: number }>
+/** DB 文档格式 */
+export interface PromptDoc {
+  _id: string
+  _rev?: string
+  data: PromptItem
 }

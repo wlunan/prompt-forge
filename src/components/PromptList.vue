@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { PromptUnit } from '../types'
+import type { PromptItem } from '../types'
 import { usePromptStore } from '../stores/prompt'
 
 defineProps<{
-  items: PromptUnit[]
+  items: PromptItem[]
   activeIndex: number
   selectedId?: string
 }>()

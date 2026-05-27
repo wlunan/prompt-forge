@@ -14,7 +14,7 @@
   "features": [
     {
       "code": "promptforge_call",
-      "explain": "调用提示词",
+      "explain": "打开 PromptForge 空间",
       "icon": "logo.png",
       "cmds": [
         "pf",

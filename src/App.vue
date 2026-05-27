@@ -2,24 +2,27 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from './stores/router'
 import { usePromptStore } from './stores/prompt'
+import { useProjectStore } from './stores/project'
 import { useAppSettings } from './stores/app'
 import { useTheme } from './stores/theme'
 import CommandBar from './components/CommandBar.vue'
-import CallView from './views/CallView.vue'
+import SpaceView from './views/SpaceView.vue'
 import WizardView from './views/WizardView.vue'
-import LibraryView from './views/LibraryView.vue'
+import ManageView from './views/ManageView.vue'
 import QuickSaveView from './views/QuickSaveView.vue'
 import ComposeView from './views/ComposeView.vue'
 import SettingsView from './views/SettingsView.vue'
 
 const router = useRouter()
 const promptStore = usePromptStore()
+const projectStore = useProjectStore()
 const appSettings = useAppSettings()
 const themeStore = useTheme()
 const ready = ref(false)
 
 onMounted(async () => {
   await promptStore.ensureReady()
+  await projectStore.ensureReady()
   await appSettings.load()
   await themeStore.init()
   ready.value = true
@@ -28,32 +31,25 @@ onMounted(async () => {
   if (ztools) {
     ztools.onPluginEnter(async (param: any) => {
       if (param.code === 'promptforge_call') {
-        router.navigateTo('call')
+        router.navigateTo('space')
       } else if (param.code === 'promptforge_quick_save') {
-        const content = param.type === 'over'
-          ? String(param.payload ?? '')
-          : ''
+        const content = param.type === 'over' ? String(param.payload ?? '') : ''
         if (content.length >= 20) {
           router.enterQuickSave(content, param.type === 'over' ? 'selected' : 'clipboard')
         }
       }
     })
-    ztools.onPluginOut(() => {
-      router.resetSelection()
-    })
   }
 })
 
 const viewMap: Record<string, any> = {
-  call: CallView,
+  space: SpaceView,
   wizard: WizardView,
-  library: LibraryView,
-  'quick-save': QuickSaveView,
   compose: ComposeView,
+  manage: ManageView,
   settings: SettingsView,
 }
-
-const activeComponent = computed(() => viewMap[router.currentRoute.value] || CallView)
+const activeComponent = computed(() => viewMap[router.currentView.value] || SpaceView)
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PromptUnit } from '../types'
-import { renderVariables } from '../utils/index'
+import type { PromptItem } from '../types'
 
 const props = defineProps<{
-  unit: PromptUnit | null
+  unit: PromptItem | null
   values: Record<string, string>
 }>()
 
@@ -20,7 +20,7 @@ const missingCount = computed(() =>
 )
 const preview = computed(() => {
   if (!props.unit) return ''
-  return renderVariables(props.unit.body, props.values)
+  return renderVariables(props.unit.content, props.values)
 })
 
 function updateValue(name: string, value: string) {
