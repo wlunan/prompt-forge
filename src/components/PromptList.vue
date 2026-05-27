@@ -17,9 +17,9 @@ const emit = defineEmits<{
 
 const prompt = usePromptStore()
 
-function timeAgo(dateStr?: string): string {
-  if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
+function timeAgo(dateVal?: string | number): string {
+  if (!dateVal) return ''
+  const diff = Date.now() - new Date(dateVal).getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return '刚刚'
   if (mins < 60) return `${mins}分钟前`
@@ -40,7 +40,7 @@ function timeAgo(dateStr?: string): string {
         @click="emit('select', index); emit('activate')"
       >
         <div class="card-left">
-          <div :class="['dot', { fav: item.favorited }]"></div>
+          <div :class="['dot', { fav: item.favorite }]"></div>
         </div>
         <div class="card-body">
           <div class="card-title">{{ item.title }}</div>

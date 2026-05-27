@@ -107,7 +107,89 @@ prompt-forge/
 
 ## 数据存储
 
-提示词数据存储在 ZTools 内置数据库中，通过 `ztools.db` API 读写。插件不发起任何网络请求，所有数据仅保留在本地。
+所有数据仅保留在本地，不发起任何网络请求。底层基于 ZTools 内置的 LMDB 文档数据库，通过 `ztools.db` API 读写。
+
+### 存储架构
+
+```
+preload/services.js  →  window.kvStorage  →  storage.ts  →  Pinia Store (内存)
+     (封装层)              (KV 接口)           (读写函数)      (响应式状态)
+```
+
+### 数据库文档（KV 模式）
+
+插件采用 KV 模式，将每类数据打包为一个文档整体存取：
+
+| 文档 `_id` | 数据结构 | 说明 |
+|---|---|---|
+| `promptforge:prompts` | `PromptItem[]` | 所有提示词，包含已删除项 |
+| `promptforge:projects` | `Project[]` | 所有项目 |
+| `promptforge:settings` | `Record<string, any>` | 用户设置（主题、行为等） |
+
+### 核心数据模型
+
+**PromptItem — 提示词**
+
+```typescript
+{
+  id: string                   // 唯一标识
+  title: string                // 标题
+  description?: string         // 描述
+  content: string              // 正文，支持 {{变量名}} / ${变量名} 语法
+  type: 'prompt' | 'snippet' | 'template' | 'constraint'
+  tags: string[]               // 标签列表
+  variables: Variable[]        // 从正文自动提取的变量定义
+  favorite: boolean            // 是否收藏
+  usageCount: number           // 使用次数
+  projectId?: string           // 所属项目 ID（无则为"资产"）
+  deleted?: boolean            // 软删除标记（回收站）
+  version: number              // 当前版本号
+  snapshots: Snapshot[]        // 版本快照历史
+  createdAt: number            // 创建时间戳
+  updatedAt: number            // 更新时间戳
+  lastUsedAt?: number          // 最后使用时间（运行时字段）
+}
+```
+
+**Variable — 变量定义**
+
+```typescript
+{
+  name: string                 // 变量名
+  required: boolean            // 是否必填（无默认值时为 true）
+  defaultValue?: string        // 默认值
+}
+```
+
+**Snapshot — 版本快照**
+
+```typescript
+{
+  version: number              // 版本号
+  body: string                 // 快照时的正文内容
+  note: string                 // 版本说明
+  createdAt: number            // 快照时间戳
+}
+```
+
+**Project — 项目**
+
+```typescript
+{
+  id: string
+  name: string
+  group: '开发' | '学习' | '写作' | '研究' | '其他'
+  description?: string
+  createdAt: number
+  updatedAt: number
+}
+```
+
+### 实体关系
+
+- **PromptItem → Project**：多对一，通过 `projectId` 关联（可选）
+- **PromptItem → Variable**：一对多，变量从正文 `{{name}}` 语法自动提取
+- **PromptItem → Snapshot**：一对多，正文变更时自动保存快照
 
 ## 许可
 
