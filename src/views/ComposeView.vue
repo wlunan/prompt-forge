@@ -78,7 +78,7 @@ async function saveAsNew() {
   <div class="compose">
     <div class="compose-body">
       <!-- 左：基础 -->
-      <div class="col"><div class="ch">基础提示词</div><div class="cl" v-for="p in basePrompts" :key="p.id" :class="{ active: p.id === selectedBaseId }" @click="selectedBaseId = p.id"><div class="ct">{{ p.title }}</div><div class="cd">{{ p.content }}</div></div></div>
+      <div class="col"><div class="ch">基础提示词</div><div class="cl"><div v-for="p in basePrompts" :key="p.id" :class="['mini-card', { active: p.id === selectedBaseId }]" @click="selectedBaseId = p.id"><div class="ct">{{ p.title }}</div><div class="cd">{{ p.content }}</div></div></div></div>
       <!-- 中：画布 -->
       <div class="canvas">
         <div class="cc muted"><div class="cc-h">基础</div><div class="ct">{{ selectedBase?.title || '未选择' }}</div><div class="cc-b">{{ selectedBase?.content }}</div></div>
@@ -92,7 +92,7 @@ async function saveAsNew() {
         </div>
       </div>
       <!-- 右：片段 -->
-      <div class="col"><div class="ch">添加片段</div><div class="cl" v-for="f in snippets" :key="f.id" @click="addFrag(f)"><div class="ct">{{ f.title }} <span class="add">+</span></div><div class="cd">{{ f.content }}</div></div></div>
+      <div class="col"><div class="ch">添加片段</div><div class="cl"><div v-for="f in snippets" :key="f.id" class="mini-card" @click="addFrag(f)"><div class="ct">{{ f.title }} <span class="add">+</span></div><div class="cd">{{ f.content }}</div></div></div></div>
     </div>
     <div class="compose-foot"><span class="ok">✔ 变量已自动去重</span><span class="spacer"></span><button class="btn" @click="saveAsNew">另存</button><button class="btn primary" @click="copyComposite">复制合成提示词</button></div>
   </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PromptUnit } from '../types'
 import type { PromptItem } from '../types'
+import { renderVariables } from '../utils/index'
 
 const props = defineProps<{
   unit: PromptItem | null
@@ -19,7 +19,7 @@ const missingCount = computed(() =>
   variables.value.filter(v => v.required && !props.values[v.name]?.trim()).length
 )
 const preview = computed(() => {
-  if (!props.unit) return ''
+  if (!props.unit?.content) return ''
   return renderVariables(props.unit.content, props.values)
 })
 

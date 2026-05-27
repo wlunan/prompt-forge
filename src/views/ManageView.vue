@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
@@ -23,10 +23,10 @@ const selectedUnit = computed(() => prompt.rawItems.value.find(i => i.id === sel
 
 watch(selectedUnit, (u) => {
   if (!u) return
-  editBody.value = u.content; editTitle.value = u.title
-  editTags.value = [...u.tags]
+  editBody.value = u.content || ''; editTitle.value = u.title || ''
+  editTags.value = [...(u.tags || [])]
   editVars.value = u.variables ? JSON.parse(JSON.stringify(u.variables)) : []
-})
+}, { immediate: true })
 
 function addTag() { const t = tagInput.value.trim(); if (t && !editTags.value.includes(t)) editTags.value.push(t); tagInput.value = '' }
 function removeTag(t: string) { editTags.value = editTags.value.filter(x => x !== t) }
@@ -63,6 +63,8 @@ async function deleteUnit() {
   prompt.softDelete(u.id)
   selectedId.value = ''
 }
+
+onMounted(() => { prompt.ensureReady() })
 </script>
 
 <template>

@@ -19,6 +19,7 @@ export function extractVariables(text: string): Variable[] {
 
 /** 替换文本中的变量为实际值 */
 export function renderVariables(text: string, values: Record<string, string>): string {
+  if (!text) return ''
   return text.replace(/(?:\{\{|\$\{)([a-zA-Z0-9_-]+)(?:=[^}]+)?(?:\}\}|\})/g, (_, name) => {
     return values[name] ?? `{{${name}}}`
   })
