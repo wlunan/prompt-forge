@@ -8,7 +8,7 @@ let _initPromise: Promise<void> | null = null
 
 export function usePromptStore() {
   // 筛选状态
-  const spaceTab = ref<'recent' | 'favorite' | 'project' | 'asset' | 'trash'>('recent')
+  const spaceTab = ref<'all' | 'recent' | 'favorite' | 'project' | 'asset' | 'trash'>('recent')
   const query = ref('')
   const filterTag = ref('')
   const filterProjectId = ref('')
@@ -44,6 +44,7 @@ export function usePromptStore() {
   const spaceItems = computed(() => {
     let items: PromptItem[]
     switch (spaceTab.value) {
+      case 'all': items = liveItems.value; break
       case 'recent': items = recentItems.value; break
       case 'favorite': items = favoriteItems.value; break
       case 'project': items = filterProjectId.value

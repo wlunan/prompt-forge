@@ -94,7 +94,6 @@ async function saveAsNew() {
       <!-- 右：片段 -->
       <div class="col"><div class="ch">添加片段</div><div class="cl"><div v-for="f in snippets" :key="f.id" class="mini-card" @click="addFrag(f)"><div class="ct">{{ f.title }} <span class="add">+</span></div><div class="cd">{{ f.content }}</div></div></div></div>
     </div>
-    <div class="compose-foot"><span class="ok">✔ 变量已自动去重</span><span class="spacer"></span><button class="btn" @click="saveAsNew">另存</button><button class="btn primary" @click="copyComposite">复制合成提示词</button></div>
   </div>
 </template>
 

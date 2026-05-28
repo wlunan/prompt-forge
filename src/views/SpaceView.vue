@@ -8,7 +8,7 @@ import { copyText, showNotification, hideMainWindow } from '../utils/platform'
 import { renderVariables } from '../utils/index'
 import PromptList from '../components/PromptList.vue'
 import FillPanel from '../components/FillPanel.vue'
-import type { ProjectGroup } from '../types'
+import type { Project, ProjectGroup } from '../types'
 
 const router = useRouter()
 const prompt = usePromptStore()
@@ -20,7 +20,44 @@ const newProjectName = ref('')
 const newProjectGroup = ref<ProjectGroup>('开发')
 const newProjectDesc = ref('')
 
+// 项目右键菜单
+const ctxMenu = ref<{ visible: boolean; x: number; y: number; project: Project | null }>({
+  visible: false, x: 0, y: 0, project: null,
+})
+const showMoveGroup = ref(false)
+
+function onProjectContextMenu(e: MouseEvent, project: Project) {
+  e.preventDefault()
+  ctxMenu.value = { visible: true, x: e.clientX, y: e.clientY, project }
+  showMoveGroup.value = false
+}
+
+function closeCtxMenu() {
+  ctxMenu.value.visible = false
+  showMoveGroup.value = false
+}
+
+function deleteProject(p: Project) {
+  // 将项目下的提示词取消项目关联
+  prompt.liveItems.value.forEach(item => {
+    if (item.projectId === p.id) {
+      prompt.updateItem(item.id, { projectId: undefined })
+    }
+  })
+  projectStore.removeProject(p.id)
+  if (prompt.filterProjectId.value === p.id) prompt.filterProjectId.value = ''
+  showNotification(`已删除项目「${p.name}」`)
+  closeCtxMenu()
+}
+
+function moveProjectGroup(p: Project, group: ProjectGroup) {
+  projectStore.updateProject(p.id, { group })
+  showNotification(`「${p.name}」已移至「${group}」`)
+  closeCtxMenu()
+}
+
 const sideNav = computed(() => [
+  { key: 'all' as const, label: '全部', icon: '📋' },
   { key: 'recent' as const, label: '最近', icon: '🕘' },
   { key: 'favorite' as const, label: '收藏', icon: '⭐' },
   { key: 'project' as const, label: '项目', icon: '📁' },
@@ -98,10 +135,14 @@ function handleKeyDown(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('click', closeCtxMenu)
   projectStore.ensureReady()
   setTimeout(() => { const input = document.querySelector('.topbar-search') as HTMLInputElement; input?.focus() }, 100)
 })
-onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('click', closeCtxMenu)
+})
 </script>
 
 <template>
@@ -113,6 +154,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
       >
         <span class="side-icon">{{ nav.icon }}</span>
         <span class="side-label">{{ nav.label }}</span>
+        <span v-if="nav.key === 'all'" class="side-count">{{ prompt.liveItems.value.length }}</span>
         <span v-if="nav.key === 'trash'" class="side-count">{{ prompt.trashItems.value.length }}</span>
       </div>
       <!-- 标签管理 -->
@@ -166,7 +208,8 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
                   <div class="group-label">{{ group }}</div>
                   <div v-for="p in projectStore.groupedProjects.value[group]" :key="p.id"
                     :class="['project-item', { active: prompt.filterProjectId.value === p.id }]"
-                    @click="prompt.filterProjectId.value = p.id; prompt.keyboardIndex.value = 0">
+                    @click="prompt.filterProjectId.value = p.id; prompt.keyboardIndex.value = 0"
+                    @contextmenu="onProjectContextMenu($event, p)">
                     <span class="pi-name">{{ p.name }}</span>
                     <span class="pi-count">{{ prompt.liveItems.value.filter(i => i.projectId === p.id).length }}</span>
                   </div>
@@ -246,6 +289,38 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
         </template>
       </template>
     </div>
+
+    <!-- 项目右键菜单 -->
+    <teleport to="body">
+      <div v-if="ctxMenu.visible" class="ctx-menu" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @click.stop>
+        <template v-if="!showMoveGroup">
+          <div class="ctx-menu-item" @click="showMoveGroup = true">
+            <span>📂</span><span>移动到…</span>
+          </div>
+          <div class="ctx-menu-divider"></div>
+          <div class="ctx-menu-item danger" @click="deleteProject(ctxMenu.project!)">
+            <span>🗑</span><span>删除项目</span>
+          </div>
+        </template>
+        <template v-else>
+          <div class="ctx-menu-title">移动到分组</div>
+          <div class="ctx-menu-divider"></div>
+          <div
+            v-for="g in projectStore.GROUPS"
+            :key="g"
+            class="ctx-menu-item"
+            :class="{ active: ctxMenu.project?.group === g }"
+            @click="moveProjectGroup(ctxMenu.project!, g)"
+          >
+            <span>{{ ctxMenu.project?.group === g ? '✓' : '' }}</span><span>{{ g }}</span>
+          </div>
+          <div class="ctx-menu-divider"></div>
+          <div class="ctx-menu-item" @click="showMoveGroup = false">
+            <span>←</span><span>返回</span>
+          </div>
+        </template>
+      </div>
+    </teleport>
   </div>
 </template>
 
@@ -363,4 +438,25 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 .trash-actions .btn.danger { color: var(--pf-danger, #ef4444); }
 .trash-actions .btn.danger:hover { background: rgba(239, 68, 68, 0.08); }
 .empty-hint { text-align: center; color: var(--pf-text-faint); font-size: 13px; padding: 40px 0; }
+
+/* 右键菜单 */
+.ctx-menu {
+  position: fixed; z-index: 9999;
+  min-width: 160px; padding: 4px 0;
+  background: var(--pf-bg-elevated);
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-radius-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.ctx-menu-title { font-size: 11px; font-weight: 700; color: var(--pf-text-faint); padding: 6px 12px 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+.ctx-menu-divider { height: 1px; background: var(--pf-border); margin: 4px 0; }
+.ctx-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; font-size: 13px; color: var(--pf-text);
+  cursor: pointer; transition: background 0.1s;
+}
+.ctx-menu-item:hover { background: var(--pf-surface-hover); }
+.ctx-menu-item.active { color: var(--pf-accent); font-weight: 600; }
+.ctx-menu-item.danger { color: var(--pf-danger, #ef4444); }
+.ctx-menu-item.danger:hover { background: rgba(239, 68, 68, 0.08); }
 </style>
