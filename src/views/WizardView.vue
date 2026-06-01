@@ -26,6 +26,9 @@ const tags = computed(() => tagsRaw.value.split(',').map(s => s.trim()).filter(B
 onMounted(() => {
   const p = router.consumeWizardPrefill()
   if (p) content.value = p
+  // 接收项目上下文
+  const pid = router.consumeWizardProjectId()
+  if (pid) selectedProjectId.value = pid
   setTimeout(() => { const ta = document.querySelector('.ta') as HTMLTextAreaElement; ta?.focus() }, 100)
 })
 
@@ -108,6 +111,7 @@ async function save(type?: 'prompt' | 'snippet' | 'template' | 'constraint') {
       <button v-if="step > 1" class="btn" @click="step--">← 上一步</button>
       <button v-else class="btn" @click="router.navigateTo('space')">取消</button>
       <span class="spacer"></span>
+      <button v-if="step === 1" class="btn" @click="save()" :disabled="saving || !content.trim()">⚡ 快速保存</button>
       <template v-if="step < 3"><button class="btn primary" @click="next">下一步 →</button></template>
       <template v-else>
         <button class="btn" @click="save('snippet')">片段</button>

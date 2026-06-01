@@ -13,6 +13,10 @@ export function usePromptStore() {
   const filterTag = ref('')
   const filterProjectId = ref('')
   const activePromptId = ref('')
+  const sortBy = ref<'createdAt' | 'updatedAt' | 'title' | 'usageCount'>('createdAt')
+  const sortDir = ref<'desc' | 'asc'>('desc')
+
+  /** 不含已删除项 */
 
   // 调用阶段
   const phase = ref<'search' | 'fill'>('search')
@@ -42,13 +46,19 @@ export function usePromptStore() {
 
   /** 当前空间页显示的列表 */
   const spaceItems = computed(() => {
+    const currentTab = spaceTab.value
+    const currentFilterTag = filterTag.value
+    const currentFilterProjectId = filterProjectId.value
+    const currentSortBy = sortBy.value
+    const currentSortDir = sortDir.value
+
     let items: PromptItem[]
-    switch (spaceTab.value) {
+    switch (currentTab) {
       case 'all': items = liveItems.value; break
       case 'recent': items = recentItems.value; break
       case 'favorite': items = favoriteItems.value; break
-      case 'project': items = filterProjectId.value
-        ? liveItems.value.filter(i => i.projectId === filterProjectId.value)
+      case 'project': items = currentFilterProjectId
+        ? liveItems.value.filter(i => i.projectId === currentFilterProjectId)
         : liveItems.value.filter(i => i.projectId)
         break
       case 'asset': items = assetItems.value; break
@@ -56,7 +66,14 @@ export function usePromptStore() {
       default: items = liveItems.value
     }
     // 标签筛选
-    if (filterTag.value) items = items.filter(i => i.tags.includes(filterTag.value))
+    if (currentFilterTag) items = items.filter(i => i.tags.includes(currentFilterTag))
+    // 排序
+    items = [...items].sort((a, b) => {
+      const dir = currentSortDir === 'desc' ? -1 : 1
+      if (currentSortBy === 'title') return dir * (a.title || '').localeCompare(b.title || '')
+      if (currentSortBy === 'usageCount') return dir * ((a.usageCount || 0) - (b.usageCount || 0))
+      return dir * ((a[currentSortBy] as number || 0) - (b[currentSortBy] as number || 0))
+    })
     return items
   })
 
@@ -168,6 +185,7 @@ export function usePromptStore() {
   return {
     rawItems, isLoading,
     spaceTab, query, filterTag, filterProjectId, activePromptId,
+    sortBy, sortDir,
     phase, selectedPrompt, variableValues, keyboardIndex,
     liveItems, recentItems, favoriteItems, assetItems, trashItems,
     spaceItems, allTags, filteredCallItems, activeItem,

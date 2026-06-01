@@ -7,26 +7,45 @@ import { extractVariables, renderVariables, generateId } from '../utils/index'
 import { copyText, showNotification, hideMainWindow } from '../utils/platform'
 import type { PromptItem } from '../types'
 
+interface CanvasItem {
+  item: PromptItem
+  position: 'front' | 'back'
+}
+
 const router = useRouter()
 const promptStore = usePromptStore()
 const appSettings = useAppSettings()
 const selectedBaseId = ref('')
-const canvasFrags = ref<PromptItem[]>([])
+const canvasFrags = ref<CanvasItem[]>([])
 const varOverrides = ref<Record<string, string>>({})
+const rightTab = ref<'snippet' | 'constraint'>('snippet')
 
 const basePrompts = computed(() => promptStore.liveItems.value.filter(i => i.type === 'prompt'))
 const snippets = computed(() => promptStore.liveItems.value.filter(i => i.type === 'snippet'))
+const constraints = computed(() => promptStore.liveItems.value.filter(i => i.type === 'constraint'))
+const rightItems = computed(() => rightTab.value === 'snippet' ? snippets.value : constraints.value)
 const selectedBase = computed(() => promptStore.liveItems.value.find(i => i.id === selectedBaseId.value) || basePrompts.value[0] || null)
+
+const frontFrags = computed(() => canvasFrags.value.filter(f => f.position === 'front'))
+const backFrags = computed(() => canvasFrags.value.filter(f => f.position === 'back'))
+
 onMounted(async () => {
   await promptStore.ensureReady()
   if (basePrompts.value.length && !selectedBaseId.value) selectedBaseId.value = basePrompts.value[0].id
 })
 
 const composedText = computed(() => {
-  let t = selectedBase.value?.content || ''
-  if (canvasFrags.value.length) {
+  let t = ''
+  // 前置片段
+  if (frontFrags.value.length) {
+    frontFrags.value.forEach(f => { t += f.item.content + '\n\n' })
+  }
+  // 基础提示词
+  t += selectedBase.value?.content || ''
+  // 后置片段/约束
+  if (backFrags.value.length) {
     t += '\n\n请遵循以下要求：\n'
-    canvasFrags.value.forEach(f => { t += `- ${f.content}\n` })
+    backFrags.value.forEach(f => { t += `- ${f.item.content}\n` })
   }
   return t
 })
@@ -40,15 +59,16 @@ const renderedText = computed(() => {
   return t
 })
 
-function addFrag(f: PromptItem) {
-  if (canvasFrags.value.some(x => x.id === f.id)) { showNotification('已在画布中'); return }
-  canvasFrags.value.push(f)
+function addFrag(f: PromptItem, position: 'front' | 'back' = 'back') {
+  if (canvasFrags.value.some(x => x.item.id === f.id)) { showNotification('已在画布中'); return }
+  canvasFrags.value.push({ item: f, position })
 }
 function removeFrag(i: number) { canvasFrags.value.splice(i, 1) }
 function moveFrag(i: number, dir: 'up' | 'down') {
+  const arr = canvasFrags.value
   const t = dir === 'up' ? i - 1 : i + 1
-  if (t < 0 || t >= canvasFrags.value.length) return
-  ;[canvasFrags.value[i], canvasFrags.value[t]] = [canvasFrags.value[t], canvasFrags.value[i]]
+  if (t < 0 || t >= arr.length) return
+  ;[arr[i], arr[t]] = [arr[t], arr[i]]
 }
 
 async function copyComposite() {
@@ -81,18 +101,45 @@ async function saveAsNew() {
       <div class="col"><div class="ch">基础提示词</div><div class="cl"><div v-for="p in basePrompts" :key="p.id" :class="['mini-card', { active: p.id === selectedBaseId }]" @click="selectedBaseId = p.id"><div class="ct">{{ p.title }}</div><div class="cd">{{ p.content }}</div></div></div></div>
       <!-- 中：画布 -->
       <div class="canvas">
-        <div class="cc muted"><div class="cc-h">基础</div><div class="ct">{{ selectedBase?.title || '未选择' }}</div><div class="cc-b">{{ selectedBase?.content }}</div></div>
-        <div v-for="(f, i) in canvasFrags" :key="f.id" class="cc">
-          <div class="cc-h"><span>片段 {{ i+1 }}</span><span class="moves"><button :disabled="i===0" @click="moveFrag(i,'up')">▲</button><button :disabled="i===canvasFrags.length-1" @click="moveFrag(i,'down')">▼</button></span><span class="x" @click="removeFrag(i)">×</span></div>
-          <div class="ct">{{ f.title }}</div><div class="cc-b">{{ f.content }}</div>
+        <!-- 前置片段 -->
+        <div v-for="(f, i) in frontFrags" :key="f.item.id" class="cc front">
+          <div class="cc-h"><span>📌 前置 {{ i+1 }}</span><span class="moves"><button :disabled="i===0" @click="moveFrag(canvasFrags.indexOf(f),'up')">▲</button><button :disabled="i===frontFrags.length-1" @click="moveFrag(canvasFrags.indexOf(f),'down')">▼</button></span><span class="x" @click="removeFrag(canvasFrags.indexOf(f))">×</span></div>
+          <div class="ct">{{ f.item.title }}</div><div class="cc-b">{{ f.item.content }}</div>
         </div>
-        <div v-if="!canvasFrags.length" class="empty-c">在右侧选择片段添加至此</div>
+        <!-- 基础 -->
+        <div class="cc muted"><div class="cc-h">基础</div><div class="ct">{{ selectedBase?.title || '未选择' }}</div><div class="cc-b">{{ selectedBase?.content }}</div></div>
+        <!-- 后置片段/约束 -->
+        <div v-for="(f, i) in backFrags" :key="f.item.id" class="cc back">
+          <div class="cc-h"><span>{{ f.item.type === 'constraint' ? '🛡 约束' : '📎 片段' }} {{ i+1 }}</span><span class="moves"><button :disabled="i===0" @click="moveFrag(canvasFrags.indexOf(f),'up')">▲</button><button :disabled="i===backFrags.length-1" @click="moveFrag(canvasFrags.indexOf(f),'down')">▼</button></span><span class="x" @click="removeFrag(canvasFrags.indexOf(f))">×</span></div>
+          <div class="ct">{{ f.item.title }}</div><div class="cc-b">{{ f.item.content }}</div>
+        </div>
+        <div v-if="!canvasFrags.length" class="empty-c">在右侧选择片段或约束添加至此</div>
+        <!-- 合成预览 -->
         <div class="cc preview"><div class="cc-h">合成预览</div><div class="cc-b mono">{{ renderedText }}</div>
           <div v-if="composedVars.length" class="vars"><span v-for="v in composedVars" :key="v.name" class="vt">{{ v.name }} <input v-model="varOverrides[v.name]" :placeholder="v.defaultValue||'输入…'" /></span></div>
         </div>
       </div>
-      <!-- 右：片段 -->
-      <div class="col"><div class="ch">添加片段</div><div class="cl"><div v-for="f in snippets" :key="f.id" class="mini-card" @click="addFrag(f)"><div class="ct">{{ f.title }} <span class="add">+</span></div><div class="cd">{{ f.content }}</div></div></div></div>
+      <!-- 右：片段/约束 -->
+      <div class="col">
+        <div class="ch">
+          <span :class="['tab', { active: rightTab === 'snippet' }]" @click="rightTab = 'snippet'">片段</span>
+          <span class="tab-sep">/</span>
+          <span :class="['tab', { active: rightTab === 'constraint' }]" @click="rightTab = 'constraint'">约束</span>
+        </div>
+        <div class="cl">
+          <template v-if="rightItems.length">
+            <div v-for="f in rightItems" :key="f.id" class="mini-card">
+              <div class="ct">{{ f.title }}</div>
+              <div class="cd">{{ f.content }}</div>
+              <div class="add-btns">
+                <button class="abtn" @click="addFrag(f, 'front')" title="添加到前置">↑ 前置</button>
+                <button class="abtn" @click="addFrag(f, 'back')" title="添加到后置">↓ 后置</button>
+              </div>
+            </div>
+          </template>
+          <div v-else class="empty-c">{{ rightTab === 'snippet' ? '暂无片段' : '暂无约束' }}</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -123,6 +170,15 @@ async function saveAsNew() {
 .x { margin-left: auto; color: var(--pf-text-faint); cursor: pointer; }
 .x:hover { color: var(--pf-danger); }
 .empty-c { border: 1px dashed var(--pf-border); border-radius: var(--pf-radius-sm); padding: 20px; text-align: center; color: var(--pf-text-faint); font-size: 12px; }
+.cc.front { border-left: 3px solid var(--pf-success); }
+.cc.back { border-left: 3px solid var(--pf-accent); }
+.tab { cursor: pointer; color: var(--pf-text-muted); transition: color 0.12s; }
+.tab.active { color: var(--pf-accent); font-weight: 700; }
+.tab:hover { color: var(--pf-accent); }
+.tab-sep { color: var(--pf-text-faint); margin: 0 2px; }
+.add-btns { display: flex; gap: 4px; margin-top: 6px; }
+.abtn { flex: 1; padding: 4px 0; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-xs); font-size: 10.5px; color: var(--pf-text-muted); background: var(--pf-surface); cursor: pointer; transition: all 0.12s; }
+.abtn:hover { border-color: var(--pf-accent); color: var(--pf-accent); background: var(--pf-accent-soft); }
 .vars { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--pf-border); }
 .vt { display: inline-flex; align-items: center; gap: 4px; background: var(--pf-accent-soft); color: var(--pf-accent); padding: 2px 6px; border-radius: var(--pf-radius-xs); font-size: 11px; font-weight: 500; }
 .vt input { width: 70px; border: 0; border-bottom: 1px solid var(--pf-border); background: transparent; font-size: 11px; }

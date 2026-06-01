@@ -103,14 +103,19 @@ function createProject() {
   showNotification('✓ 项目已创建')
 }
 
+/** 获取当前项目上下文 ID（仅在项目 tab 且选中了具体项目时返回） */
+function currentProjectId(): string {
+  return (prompt.spaceTab.value === 'project' && prompt.filterProjectId.value) ? prompt.filterProjectId.value : ''
+}
+
 function handleKeyDown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); router.enterWizard(prompt.query.value.trim()); return }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); router.enterWizard(prompt.query.value.trim(), currentProjectId()); return }
 
   if (prompt.phase.value === 'search') {
     const tag = (e.target as HTMLElement)?.tagName
     const isInput = tag === 'INPUT' || tag === 'TEXTAREA'
     if (e.key === 'Enter' && prompt.filteredCallItems.value.length === 0 && prompt.query.value.trim()) {
-      e.preventDefault(); router.enterWizard(prompt.query.value.trim()); return
+      e.preventDefault(); router.enterWizard(prompt.query.value.trim(), currentProjectId()); return
     }
     if (e.key === 'ArrowDown') { e.preventDefault(); prompt.moveSelection('down') }
     else if (e.key === 'ArrowUp') { e.preventDefault(); prompt.moveSelection('up') }
@@ -181,7 +186,7 @@ onUnmounted(() => {
           placeholder="搜索提示词…"
           class="topbar-search"
         />
-        <button class="btn primary topbar-btn" @click="router.enterWizard(prompt.query.value.trim())">
+        <button class="btn primary topbar-btn" @click="router.enterWizard(prompt.query.value.trim(), currentProjectId())">
           <svg viewBox="0 0 16 16" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round">
             <line x1="8" y1="2" x2="8" y2="14" /><line x1="2" y1="8" x2="14" y2="8" />
           </svg>
@@ -231,7 +236,7 @@ onUnmounted(() => {
                 :selected-id="prompt.selectedPrompt.value?.id"
                 @select="(i: number) => { prompt.keyboardIndex.value = i }"
                 @activate="prompt.selectActive()"
-                @enter-wizard="router.enterWizard(prompt.query.value.trim())"
+                @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"
                 @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
               />
             </template>
@@ -274,7 +279,7 @@ onUnmounted(() => {
             :selected-id="prompt.selectedPrompt.value?.id"
             @select="(i: number) => { prompt.keyboardIndex.value = i }"
             @activate="prompt.selectActive()"
-            @enter-wizard="router.enterWizard(prompt.query.value.trim())"
+            @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"
             @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
           />
         </template>
@@ -329,7 +334,7 @@ onUnmounted(() => {
 
 /* 左侧边栏 */
 .space-sidebar {
-  width: 180px; flex-shrink: 0;
+  width: 150px; flex-shrink: 0;
   background: var(--pf-bg-elevated);
   border-right: 1px solid var(--pf-border);
   display: flex; flex-direction: column;

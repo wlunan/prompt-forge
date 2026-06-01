@@ -2,12 +2,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
+import { useProjectStore } from '../stores/project'
 import { extractVariables, inferTitle, generateId, detectDuplicate } from '../utils/index'
 import type { PromptItem } from '../types'
 import { showNotification } from '../utils/platform'
 
 const router = useRouter()
 const promptStore = usePromptStore()
+const projectStore = useProjectStore()
 const content = computed(() => router.quickSaveContent.value || '')
 const source = computed(() => router.quickSaveSource.value === 'selected' ? '选中文本' : '剪贴板')
 const detectedVars = computed(() => extractVariables(content.value))
@@ -15,10 +17,15 @@ const title = ref('')
 const tags = ref<string[]>([])
 const tagInput = ref('')
 const dupPhase = ref<'normal' | 'exact' | 'similar'>('normal')
+const selectedProjectId = ref('')
 
 onMounted(async () => {
   await promptStore.ensureReady()
+  await projectStore.ensureReady()
   title.value = inferTitle(content.value)
+  // 如果路由携带了项目上下文，默认选中该项目
+  const ctxProjectId = router.quickSaveProjectId.value
+  if (ctxProjectId) selectedProjectId.value = ctxProjectId
   try {
     const r = await detectDuplicate(promptStore.rawItems.value.map(i => ({ content: i.content, id: i.id })), content.value, '')
     dupPhase.value = r.phase
@@ -41,9 +48,13 @@ async function saveNew() {
     id: generateId(), title: title.value.trim(), content: content.value,
     type: 'prompt', tags: tags.value, variables: detectedVars.value,
     favorite: false, usageCount: 0, version: 1, snapshots: [],
+    projectId: selectedProjectId.value || undefined,
     createdAt: now, updatedAt: now,
   })
-  showNotification('✓ 已保存')
+  const projName = selectedProjectId.value
+    ? projectStore.items.value.find(p => p.id === selectedProjectId.value)?.name || '项目'
+    : '资产'
+  showNotification(`✓ 已保存至${projName}`)
   setTimeout(() => router.navigateTo('space'), 300)
 }
 </script>
@@ -58,6 +69,12 @@ async function saveNew() {
       <div v-if="dupPhase === 'exact'" class="dup-banner">⚠ 完全相同的内容已存在</div>
       <div class="qsv-form">
         <div class="ff span-2"><label>标题 *</label><input v-model="title" :disabled="dupPhase === 'exact'" /></div>
+        <div class="ff"><label>归属项目</label>
+          <select v-model="selectedProjectId" class="proj-select">
+            <option value="">无项目（资产）</option>
+            <option v-for="p in projectStore.items.value" :key="p.id" :value="p.id">{{ p.group }} / {{ p.name }}</option>
+          </select>
+        </div>
         <div class="ff"><label>标签</label><div class="tags-input"><span v-for="t in tags" :key="t" class="chip">{{ t }} <span class="x" @click="removeTag(t)">×</span></span><input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="添加…" /></div></div>
       </div>
     </div>
@@ -88,6 +105,8 @@ async function saveNew() {
 .chip .x { cursor: pointer; opacity: 0.5; }
 .chip .x:hover { opacity: 1; color: var(--pf-danger); }
 .tags-input input { flex: 1; min-width: 50px; height: 24px !important; padding: 0 !important; border: 0 !important; }
+.proj-select { height: 34px; padding: 0 12px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); font-size: 13px; color: var(--pf-text); cursor: pointer; }
+.proj-select:focus { border-color: var(--pf-accent); outline: none; }
 .qsv-footer { height: 48px; flex-shrink: 0; border-top: 1px solid var(--pf-border); background: var(--pf-bg-elevated); display: flex; align-items: center; gap: 10px; padding: 0 20px; }
 .spacer { flex: 1; }
 .hint-t { font-size: 11px; color: var(--pf-text-faint); display: flex; gap: 6px; align-items: center; }

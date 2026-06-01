@@ -25,19 +25,30 @@ const editProjectId = ref('')
 const selectedIds = ref<Set<string>>(new Set())
 const selectMode = ref(false)
 
+// 筛选
+const filterType = ref<string>('')
+const filterScope = ref<string>('')
+
 // 快照
 const viewingSnapshot = ref<number | null>(null)
 
 const selectedUnit = computed(() => prompt.rawItems.value.find(i => i.id === selectedId.value) || null)
 
 const filteredItems = computed(() => {
+  let items = prompt.liveItems.value
+  // 类型筛选
+  if (filterType.value) items = items.filter(i => i.type === filterType.value)
+  // 归属筛选
+  if (filterScope.value === 'project') items = items.filter(i => i.projectId)
+  else if (filterScope.value === 'asset') items = items.filter(i => !i.projectId)
+  // 搜索
   const q = prompt.query.value.trim().toLowerCase()
-  if (!q) return prompt.liveItems.value
-  return prompt.liveItems.value.filter(i =>
+  if (q) items = items.filter(i =>
     i.title.toLowerCase().includes(q) ||
     i.content?.toLowerCase().includes(q) ||
     i.tags.some(t => t.toLowerCase().includes(q))
   )
+  return items
 })
 
 watch(selectedUnit, (u) => {
@@ -138,6 +149,20 @@ onMounted(() => { prompt.ensureReady(); projectStore.ensureReady() })
           </button>
         </div>
       </div>
+      <div class="m-filters">
+        <select v-model="filterType" class="m-filter-select">
+          <option value="">全部类型</option>
+          <option value="prompt">提示词</option>
+          <option value="snippet">片段</option>
+          <option value="template">模板</option>
+          <option value="constraint">约束</option>
+        </select>
+        <select v-model="filterScope" class="m-filter-select">
+          <option value="">全部归属</option>
+          <option value="project">项目</option>
+          <option value="asset">资产</option>
+        </select>
+      </div>
       <div v-if="selectMode && selectedIds.size > 0" class="m-batch-bar">
         <span class="batch-info">已选 {{ selectedIds.size }} 项</span>
         <button class="btn btn-xs" @click="selectAll">全选</button>
@@ -154,7 +179,7 @@ onMounted(() => { prompt.ensureReady(); projectStore.ensureReady() })
           <input v-if="selectMode" type="checkbox" :checked="selectedIds.has(item.id)" class="m-cb" @click.stop="toggleSelect(item.id)" />
           <div class="mi-body">
             <div class="mi-title"><span v-if="item.favorite" class="star">★</span>{{ item.title }}</div>
-            <div class="mi-meta"><span class="type-tag">{{ item.type }}</span><span class="spacer"></span><span class="cnt">{{ item.usageCount }}次</span></div>
+            <div class="mi-meta"><span class="type-tag">{{ { prompt: '提示词', snippet: '片段', template: '模板', constraint: '约束' }[item.type] || item.type }}</span><span class="spacer"></span><span class="cnt">{{ item.usageCount }}次</span></div>
           </div>
           <button v-if="!selectMode" class="mi-fav" @click.stop="toggleFavorite(item.id)" :title="item.favorite ? '取消收藏' : '收藏'">
             {{ item.favorite ? '★' : '☆' }}
@@ -284,6 +309,9 @@ onMounted(() => { prompt.ensureReady(); projectStore.ensureReady() })
 .btn-xs { height: 24px; padding: 0 8px; font-size: 11px; }
 .btn-xs.active { background: var(--pf-accent-soft); color: var(--pf-accent); border-color: var(--pf-accent); }
 .btn-xs.danger { color: var(--pf-danger); }
+.m-filters { display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--pf-border); }
+.m-filter-select { flex: 1; height: 28px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-xs); background: var(--pf-surface); font-size: 11.5px; padding: 0 6px; color: var(--pf-text); }
+.m-filter-select:focus { border-color: var(--pf-accent); outline: none; }
 
 .m-batch-bar { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--pf-accent-soft); border-bottom: 1px solid var(--pf-border); font-size: 11px; }
 .batch-info { font-weight: 600; color: var(--pf-accent); }

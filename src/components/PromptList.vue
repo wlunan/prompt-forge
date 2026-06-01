@@ -29,10 +29,39 @@ function timeAgo(dateVal?: string | number): string {
   const days = Math.floor(hours / 24)
   return `${days}天前`
 }
+
+function formatDate(ts?: number): string {
+  if (!ts) return ''
+  return new Date(ts).toLocaleDateString('zh-CN')
+}
+
+function toggleSort(field: 'createdAt' | 'updatedAt' | 'title' | 'usageCount') {
+  if (prompt.sortBy.value === field) {
+    prompt.sortDir.value = prompt.sortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    prompt.sortBy.value = field
+    prompt.sortDir.value = field === 'title' ? 'asc' : 'desc'
+  }
+}
+
+const sortLabel = computed(() => {
+  const map: Record<string, string> = { createdAt: '创建时间', updatedAt: '更新时间', title: '名称', usageCount: '使用次数' }
+  return map[prompt.sortBy.value] || '创建时间'
+})
+const sortIcon = computed(() => prompt.sortDir.value === 'desc' ? '↓' : '↑')
 </script>
 
 <template>
   <div class="list-wrap">
+    <div v-if="items.length > 0" class="sort-bar">
+      <span class="sort-label">排序</span>
+      <button
+        v-for="opt in [{v:'createdAt',l:'创建'},{v:'updatedAt',l:'更新'},{v:'usageCount',l:'使用'}] as const"
+        :key="opt.v"
+        :class="['sort-btn', { active: prompt.sortBy.value === opt.v }]"
+        @click="toggleSort(opt.v)"
+      >{{ opt.l }}{{ prompt.sortBy.value === opt.v ? ' ' + sortIcon : '' }}</button>
+    </div>
     <template v-if="items.length > 0">
       <div
         v-for="(item, index) in items"
@@ -48,6 +77,7 @@ function timeAgo(dateVal?: string | number): string {
         <div class="card-body">
           <div class="card-title">{{ item.title }}</div>
           <div class="card-meta">
+            <span class="create-time">📅 {{ formatDate(item.createdAt) }}</span>
             <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="tag">#{{ tag }}</span>
             <span v-if="item.variables?.length" class="tag accent">{{ item.variables.length }} 变量</span>
             <span v-if="item.usageCount" class="usage">{{ item.usageCount }}次</span>
@@ -84,6 +114,12 @@ function timeAgo(dateVal?: string | number): string {
   padding: 12px 16px;
   display: flex; flex-direction: column; gap: 8px;
 }
+.sort-bar { display: flex; align-items: center; gap: 4px; padding-bottom: 4px; }
+.sort-label { font-size: 11px; color: var(--pf-text-faint); font-weight: 600; margin-right: 4px; }
+.sort-btn { border: 1px solid var(--pf-border); border-radius: var(--pf-radius-xs); background: var(--pf-surface); font-size: 11px; color: var(--pf-text-muted); padding: 3px 8px; cursor: pointer; transition: all 0.12s; }
+.sort-btn:hover { border-color: var(--pf-accent); color: var(--pf-accent); }
+.sort-btn.active { background: var(--pf-accent-soft); color: var(--pf-accent); border-color: var(--pf-accent); font-weight: 600; }
+.create-time { font-size: 11px; color: var(--pf-text-faint); font-family: var(--pf-font-mono); }
 .card {
   display: flex; align-items: center;
   gap: 14px; padding: 14px 16px;

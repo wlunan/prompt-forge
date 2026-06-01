@@ -4,8 +4,10 @@ import { usePromptStore } from './prompt'
 /** 路由状态 */
 const currentView = ref<'space' | 'wizard' | 'compose' | 'manage' | 'quick-save' | 'settings'>('space')
 const wizardPrefillTitle = ref('')
+const wizardProjectId = ref('')
 const quickSaveContent = ref('')
 const quickSaveSource = ref<string>('manual')
+const quickSaveProjectId = ref('')
 
 export function useRouter() {
   function navigateTo(view: 'space' | 'wizard' | 'compose' | 'manage' | 'quick-save' | 'settings') {
@@ -14,8 +16,9 @@ export function useRouter() {
     currentView.value = view
   }
 
-  function enterWizard(prefillTitle = '') {
+  function enterWizard(prefillTitle = '', projectId = '') {
     wizardPrefillTitle.value = prefillTitle
+    wizardProjectId.value = projectId
     currentView.value = 'wizard'
   }
 
@@ -25,20 +28,30 @@ export function useRouter() {
     return val
   }
 
-  function enterQuickSave(content: string, source: string) {
+  function consumeWizardProjectId() {
+    const val = wizardProjectId.value
+    wizardProjectId.value = ''
+    return val
+  }
+
+  function enterQuickSave(content: string, source: string, projectId = '') {
     quickSaveContent.value = content
     quickSaveSource.value = source
+    quickSaveProjectId.value = projectId
     currentView.value = 'quick-save'
   }
 
   return {
     currentView,
     wizardPrefillTitle,
+    wizardProjectId,
     quickSaveContent,
     quickSaveSource,
+    quickSaveProjectId,
     navigateTo,
     enterWizard,
     consumeWizardPrefill,
+    consumeWizardProjectId,
     enterQuickSave,
   }
 }

@@ -68,8 +68,8 @@ export function inferTitle(body: string): string {
   for (const line of lines) { const t = line.trim(); if (t) { firstLine = t; break } }
   if (!firstLine) return '未命名'
   let title = firstLine.replace(/^#+\s*/, '').trim().replace(/\s+/g, ' ')
-  if (/[\u4e00-\u9fa5]/.test(title)) return title.length > 7 ? title.slice(0, 7) + '…' : title
-  return title.length > 15 ? title.slice(0, 15) + '…' : title
+  if (title.length > 25) return title.slice(0, 25) + '…'
+  return title
 }
 
 /** 检测重复 */

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build"
+    "build": "vue-tsc && vite build",
+    "postbuild": "robocopy dist ../prompt-focus /E /NJH /NJS /NDL /NC /NS /NP || exit 0"
   },
   "dependencies": {
     "vue": "^3.5.13"

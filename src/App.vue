@@ -5,6 +5,7 @@ import { usePromptStore } from './stores/prompt'
 import { useProjectStore } from './stores/project'
 import { useAppSettings } from './stores/app'
 import { useTheme } from './stores/theme'
+import { readClipboardText } from './utils/platform'
 import CommandBar from './components/CommandBar.vue'
 import SpaceView from './views/SpaceView.vue'
 import WizardView from './views/WizardView.vue'
@@ -33,9 +34,40 @@ onMounted(async () => {
       if (param.code === 'promptforge_call') {
         router.navigateTo('space')
       } else if (param.code === 'promptforge_quick_save') {
-        const content = param.type === 'over' ? String(param.payload ?? '') : ''
-        if (content.length >= 20) {
-          router.enterQuickSave(content, param.type === 'over' ? 'selected' : 'clipboard')
+        let content = ''
+        let source = 'selected'
+        if (param.type === 'over') {
+          content = String(param.payload ?? '')
+          source = 'selected'
+        } else if (param.type === 'regex' && param.payload) {
+          // 正则匹配：payload 就是匹配到的文本
+          content = String(param.payload)
+          source = 'clipboard'
+        } else {
+          // text 类型命令（pfs 等）：从剪贴板读取
+          const ztools = (window as any).ztools
+          try {
+            if (ztools?.clipboard?.getHistory) {
+              const result = await ztools.clipboard.getHistory(1, 1)
+              console.log('[PromptForge] clipboard history:', result)
+              const records = result?.list || result?.data || result || []
+              const first = Array.isArray(records) ? records[0] : null
+              if (first?.content) content = String(first.content)
+              else if (first?.text) content = String(first.text)
+              else if (first?.value) content = String(first.value)
+            }
+          } catch (e) { console.error('[PromptForge] clipboard error:', e) }
+          if (!content && navigator.clipboard?.readText) {
+            try { content = await navigator.clipboard.readText() } catch {}
+          }
+          source = 'clipboard'
+        }
+        console.log('[PromptForge] quick save:', { source, contentLen: content.trim().length, type: param.type, payload: param.payload })
+        if (content.trim().length >= 20) {
+          const ctxProjectId = promptStore.filterProjectId.value || ''
+          router.enterQuickSave(content.trim(), source, ctxProjectId)
+        } else {
+          showNotification('内容过短（至少20字符），当前: ' + content.trim().length + '字符')
         }
       }
     })
@@ -47,6 +79,7 @@ const viewMap: Record<string, any> = {
   wizard: WizardView,
   compose: ComposeView,
   manage: ManageView,
+  'quick-save': QuickSaveView,
   settings: SettingsView,
 }
 const activeComponent = computed(() => viewMap[router.currentView.value] || SpaceView)

@@ -12,6 +12,25 @@ export async function copyText(text: string): Promise<void> {
   throw new Error('Clipboard API not available')
 }
 
+/** 从剪贴板读取文本 */
+export async function readClipboardText(): Promise<string> {
+  const ztools = (window as any).ztools
+  // ZTools 剪贴板 API：取最新一条文本记录
+  if (ztools?.clipboard?.getHistory) {
+    try {
+      const result = await ztools.clipboard.getHistory(1, 1, 'text')
+      const records = result?.list || result?.data || result || []
+      const first = Array.isArray(records) ? records[0] : null
+      if (first?.content) return String(first.content)
+    } catch {}
+  }
+  // 回退：浏览器 Clipboard API
+  if (navigator.clipboard?.readText) {
+    try { return await navigator.clipboard.readText() } catch {}
+  }
+  return ''
+}
+
 /** 显示通知 */
 export function showNotification(message: string) {
   const ztools = (window as any).ztools
