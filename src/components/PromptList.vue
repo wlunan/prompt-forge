@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { PromptItem } from '../types'
 import { usePromptStore } from '../stores/prompt'
 
@@ -14,9 +14,33 @@ const emit = defineEmits<{
   (e: 'activate'): void
   (e: 'enterWizard'): void
   (e: 'toggleFavorite', id: string): void
+  (e: 'delete', id: string): void
+  (e: 'edit', id: string): void
 }>()
 
 const prompt = usePromptStore()
+
+// 右键菜单状态
+const ctxMenu = ref<{ visible: boolean; x: number; y: number; item: PromptItem | null }>({
+  visible: false, x: 0, y: 0, item: null,
+})
+
+function onContextMenu(e: MouseEvent, item: PromptItem) {
+  e.preventDefault()
+  ctxMenu.value = { visible: true, x: e.clientX, y: e.clientY, item }
+}
+
+function closeCtxMenu() {
+  ctxMenu.value.visible = false
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeCtxMenu)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeCtxMenu)
+})
 
 function timeAgo(dateVal?: string | number): string {
   if (!dateVal) return ''
@@ -68,6 +92,7 @@ const sortIcon = computed(() => prompt.sortDir.value === 'desc' ? '↓' : '↑')
         :key="item.id"
         :class="['card', { active: index === activeIndex }]"
         @click="emit('select', index); emit('activate')"
+        @contextmenu="onContextMenu($event, item)"
       >
         <div class="card-left">
           <button :class="['dot', { fav: item.favorite }]" @click.stop="emit('toggleFavorite', item.id)">
@@ -105,6 +130,19 @@ const sortIcon = computed(() => prompt.sortDir.value === 'desc' ? '↓' : '↑')
         创建提示词
       </button>
     </div>
+
+    <!-- 右键菜单 -->
+    <teleport to="body">
+      <div v-if="ctxMenu.visible" class="prompt-ctx-menu" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @click.stop>
+        <div class="prompt-ctx-item" @click="emit('edit', ctxMenu.item!.id); closeCtxMenu()">
+          <span>✏️</span><span>编辑</span>
+        </div>
+        <div class="prompt-ctx-divider"></div>
+        <div class="prompt-ctx-item danger" @click="emit('delete', ctxMenu.item!.id); closeCtxMenu()">
+          <span>🗑</span><span>删除</span>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
@@ -202,4 +240,25 @@ const sortIcon = computed(() => prompt.sortDir.value === 'desc' ? '↓' : '↑')
 .empty-title { font-size: 15px; font-weight: 600; color: var(--pf-text); margin: 0; }
 .empty-desc { font-size: 13px; color: var(--pf-text-muted); margin: 0; }
 .empty .btn { margin-top: 8px; }
+
+/* 右键菜单 */
+.prompt-ctx-menu {
+  position: fixed; z-index: 9999;
+  min-width: 140px; padding: 4px 0;
+  background: var(--pf-surface-raised, #fff);
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-radius-md);
+  box-shadow: var(--pf-shadow-lg, 0 8px 24px rgba(0,0,0,0.15));
+  animation: ctxFadeIn 0.12s ease;
+}
+@keyframes ctxFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.prompt-ctx-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; font-size: 13px; color: var(--pf-text);
+  cursor: pointer; transition: background 0.1s;
+}
+.prompt-ctx-item:hover { background: var(--pf-surface-hover); }
+.prompt-ctx-item.danger { color: var(--pf-danger, #ef4444); }
+.prompt-ctx-item.danger:hover { background: rgba(239, 68, 68, 0.08); }
+.prompt-ctx-divider { height: 1px; background: var(--pf-border); margin: 4px 0; }
 </style>

@@ -132,7 +132,16 @@ async function deleteUnit() {
   prompt.softDelete(u.id); selectedId.value = ''
 }
 
-onMounted(() => { prompt.ensureReady(); projectStore.ensureReady() })
+onMounted(() => {
+  prompt.ensureReady()
+  projectStore.ensureReady()
+  // 检查是否有从空间视图传来的编辑 ID
+  const editId = router.consumeManageEditId()
+  if (editId) {
+    selectedId.value = editId
+    editTab.value = 'content'
+  }
+})
 </script>
 
 <template>

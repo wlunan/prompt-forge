@@ -8,12 +8,18 @@ const wizardProjectId = ref('')
 const quickSaveContent = ref('')
 const quickSaveSource = ref<string>('manual')
 const quickSaveProjectId = ref('')
+const manageEditId = ref('') // 管理视图中要编辑的提示词 ID
 
 export function useRouter() {
   function navigateTo(view: 'space' | 'wizard' | 'compose' | 'manage' | 'quick-save' | 'settings') {
     const prompt = usePromptStore()
     prompt.resetSelection()
     currentView.value = view
+  }
+
+  function navigateToManage(editId = '') {
+    manageEditId.value = editId
+    currentView.value = 'manage'
   }
 
   function enterWizard(prefillTitle = '', projectId = '') {
@@ -41,6 +47,12 @@ export function useRouter() {
     currentView.value = 'quick-save'
   }
 
+  function consumeManageEditId() {
+    const val = manageEditId.value
+    manageEditId.value = ''
+    return val
+  }
+
   return {
     currentView,
     wizardPrefillTitle,
@@ -48,10 +60,13 @@ export function useRouter() {
     quickSaveContent,
     quickSaveSource,
     quickSaveProjectId,
+    manageEditId,
     navigateTo,
+    navigateToManage,
     enterWizard,
     consumeWizardPrefill,
     consumeWizardProjectId,
     enterQuickSave,
+    consumeManageEditId,
   }
 }

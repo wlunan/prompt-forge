@@ -26,6 +26,8 @@ const ctxMenu = ref<{ visible: boolean; x: number; y: number; project: Project |
 })
 const showMoveGroup = ref(false)
 
+
+
 function onProjectContextMenu(e: MouseEvent, project: Project) {
   e.preventDefault()
   ctxMenu.value = { visible: true, x: e.clientX, y: e.clientY, project }
@@ -54,6 +56,16 @@ function moveProjectGroup(p: Project, group: ProjectGroup) {
   projectStore.updateProject(p.id, { group })
   showNotification(`「${p.name}」已移至「${group}」`)
   closeCtxMenu()
+}
+
+function handlePromptDelete(id: string) {
+  prompt.softDelete(id)
+  showNotification('✓ 已移至回收站')
+}
+
+function handlePromptEdit(id: string) {
+  // 导航到管理视图并选中该项
+  router.navigateToManage(id)
 }
 
 const sideNav = computed(() => [
@@ -238,6 +250,8 @@ onUnmounted(() => {
                 @activate="prompt.selectActive()"
                 @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"
                 @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
+                @delete="handlePromptDelete"
+                @edit="handlePromptEdit"
               />
             </template>
             <template v-else>
@@ -281,6 +295,8 @@ onUnmounted(() => {
             @activate="prompt.selectActive()"
             @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"
             @toggle-favorite="(id: string) => prompt.toggleFavorite(id)"
+            @delete="handlePromptDelete"
+            @edit="handlePromptEdit"
           />
         </template>
         <template v-else>
