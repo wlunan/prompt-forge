@@ -146,8 +146,8 @@ async function saveAsNew() {
 
 <style scoped>
 .compose { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--pf-bg); overflow: hidden; }
-.compose-body { flex: 1; display: grid; grid-template-columns: 200px 1fr 200px; min-height: 0; overflow: hidden; }
-.col { display: flex; flex-direction: column; border-right: 1px solid var(--pf-border); background: var(--pf-bg-elevated); }
+.compose-body { flex: 1; display: grid; grid-template-columns: 200px 1fr 200px; grid-template-rows: 1fr; min-height: 0; overflow: hidden; }
+.col { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--pf-border); background: var(--pf-bg-elevated); }
 .col:last-child { border-right: 0; border-left: 1px solid var(--pf-border); }
 .ch { padding: 10px 12px 6px; font-size: 11px; font-weight: 600; color: var(--pf-text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .cl { flex: 1; overflow-y: auto; padding: 0 8px 10px; }

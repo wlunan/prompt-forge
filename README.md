@@ -96,9 +96,9 @@ prompt-forge/
 │   │   ├── PromptList.vue   # 提示词卡片列表
 │   │   └── FillPanel.vue    # 变量填写 + 正文预览
 │   └── views/
-│       ├── CallView.vue     # 调用（主界面）
+│       ├── SpaceView.vue    # 调用（主界面）
 │       ├── WizardView.vue   # 新建向导
-│       ├── LibraryView.vue  # 库管理
+│       ├── ManageView.vue   # 库管理
 │       ├── ComposeView.vue  # 组合拼接
 │       ├── QuickSaveView.vue # 快速保存
 │       └── SettingsView.vue # 设置
