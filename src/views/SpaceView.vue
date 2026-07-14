@@ -72,6 +72,13 @@ function handlePromptEdit(id: string) {
   router.navigateToManage(id)
 }
 
+const emptyState = computed(() => {
+  const tab = prompt.spaceTab.value
+  if (tab === 'recent') return { title: '暂无使用记录', desc: '使用提示词后会自动记录在这里' }
+  if (tab === 'favorite') return { title: '暂无收藏', desc: '点击提示词左侧 ☆ 即可收藏' }
+  return { title: '', desc: '' }
+})
+
 const sideNav = computed(() => [
   { key: 'all' as const, label: '全部', icon: '📋' },
   { key: 'recent' as const, label: '最近', icon: '🕘' },
@@ -170,7 +177,9 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('click', closeCtxMenu)
   projectStore.ensureReady()
-  setTimeout(() => { const input = document.querySelector('.topbar-search') as HTMLInputElement; input?.focus() }, 100)
+  if (appSettings.settings.value.autoFocus) {
+    setTimeout(() => { const input = document.querySelector('.topbar-search') as HTMLInputElement; input?.focus() }, 100)
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
@@ -263,6 +272,8 @@ onUnmounted(() => {
                 :items="prompt.filteredCallItems.value"
                 :active-index="prompt.keyboardIndex.value"
                 :selected-id="prompt.selectedPrompt.value?.id"
+                :empty-title="emptyState.title"
+                :empty-desc="emptyState.desc"
                 @select="(i: number) => { prompt.keyboardIndex.value = i }"
                 @activate="prompt.selectActive()"
                 @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"
@@ -309,6 +320,7 @@ onUnmounted(() => {
                 </div>
               </div>
               <div class="history-item-actions">
+                <button class="btn" @click="router.navigateToManage(h.promptId)" title="查看原始提示词">查看</button>
                 <button class="btn" @click="copyText(h.copiedContent); showNotification('✓ 已复制')">复制</button>
                 <button class="btn icon-btn" title="删除" @click="prompt.deleteHistoryEntry(h.id)">✕</button>
               </div>
@@ -341,6 +353,8 @@ onUnmounted(() => {
             :items="prompt.filteredCallItems.value"
             :active-index="prompt.keyboardIndex.value"
             :selected-id="prompt.selectedPrompt.value?.id"
+            :empty-title="emptyState.title"
+            :empty-desc="emptyState.desc"
             @select="(i: number) => { prompt.keyboardIndex.value = i }"
             @activate="prompt.selectActive()"
             @enter-wizard="router.enterWizard(prompt.query.value.trim(), currentProjectId())"

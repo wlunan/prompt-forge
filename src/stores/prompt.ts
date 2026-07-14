@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
+import Fuse from 'fuse.js'
 import type { PromptItem, HistoryEntry } from '../types'
-import { loadPrompts, savePrompts, loadHistory, saveHistory, MAX_HISTORY } from '../utils/storage'
+import { loadPrompts, savePrompts, loadHistory, saveHistory } from '../utils/storage'
+import { useAppSettings } from './app'
 import { generateId } from '../utils/index'
 
 const rawItems = ref<PromptItem[]>([])
@@ -95,15 +97,23 @@ export function usePromptStore() {
     return [...set].sort()
   })
 
-  // ====== 调用阶段的搜索结果 ======
+  // ====== Fuse.js 模糊搜索 ======
+  const fuseInstance = computed(() => new Fuse(spaceItems.value, {
+    keys: [
+      { name: 'title', weight: 0.5 },
+      { name: 'content', weight: 0.3 },
+      { name: 'tags', weight: 0.2 },
+    ],
+    threshold: 0.4,
+    includeScore: true,
+    ignoreLocation: true,
+    minMatchCharLength: 1,
+  }))
+
   const filteredCallItems = computed(() => {
-    if (!query.value.trim()) return spaceItems.value
-    const q = query.value.toLowerCase()
-    return spaceItems.value.filter(i =>
-      i.title.toLowerCase().includes(q) ||
-      i.content.toLowerCase().includes(q) ||
-      i.tags.some(t => t.toLowerCase().includes(q))
-    )
+    const q = query.value.trim()
+    if (!q) return spaceItems.value
+    return fuseInstance.value.search(q).map(r => r.item)
   })
 
   const activeItem = computed(() => {
@@ -159,8 +169,9 @@ export function usePromptStore() {
       usedAt: Date.now(),
     }
     historyItems.value.unshift(record)
-    if (historyItems.value.length > MAX_HISTORY) {
-      historyItems.value = historyItems.value.slice(0, MAX_HISTORY)
+    const max = useAppSettings().settings.value.maxHistory || 200
+    if (historyItems.value.length > max) {
+      historyItems.value = historyItems.value.slice(0, max)
     }
     await saveHistory(historyItems.value)
   }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import Fuse from 'fuse.js'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
@@ -41,13 +42,17 @@ const filteredItems = computed(() => {
   // 归属筛选
   if (filterScope.value === 'project') items = items.filter(i => i.projectId)
   else if (filterScope.value === 'asset') items = items.filter(i => !i.projectId)
-  // 搜索
-  const q = prompt.query.value.trim().toLowerCase()
-  if (q) items = items.filter(i =>
-    i.title.toLowerCase().includes(q) ||
-    i.content?.toLowerCase().includes(q) ||
-    i.tags.some(t => t.toLowerCase().includes(q))
-  )
+  // Fuse.js 模糊搜索
+  const q = prompt.query.value.trim()
+  if (q) {
+    const fuse = new Fuse(items, {
+      keys: ['title', 'content', 'tags'],
+      threshold: 0.4,
+      ignoreLocation: true,
+      minMatchCharLength: 1,
+    })
+    items = fuse.search(q).map(r => r.item)
+  }
   return items
 })
 
