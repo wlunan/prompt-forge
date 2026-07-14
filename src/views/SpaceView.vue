@@ -67,6 +67,13 @@ function handlePromptDelete(id: string) {
   showNotification('✓ 已移至回收站')
 }
 
+function handleClearHistory() {
+  if (confirm('确定清空所有历史记录？')) {
+    prompt.clearHistory()
+    showNotification('✓ 已清空')
+  }
+}
+
 function handlePromptEdit(id: string) {
   // 导航到管理视图并选中该项
   router.navigateToManage(id)
@@ -305,7 +312,7 @@ onUnmounted(() => {
                 :class="['sort-btn', { active: true }]"
                 @click="prompt.historySortDir.value = prompt.historySortDir.value === 'desc' ? 'asc' : 'desc'"
               >{{ prompt.historySortDir.value === 'desc' ? '最新优先' : '最早优先' }}</button>
-              <button v-if="prompt.historyItems.value.length" class="btn danger" @click="if(confirm('确定清空所有历史记录？')) { prompt.clearHistory(); showNotification('✓ 已清空') }">清空</button>
+              <button v-if="prompt.historyItems.value.length" class="btn danger" @click="handleClearHistory">清空</button>
             </div>
           </div>
           <div v-if="!prompt.sortedHistoryItems.value.length" class="empty-hint">暂无使用历史</div>
