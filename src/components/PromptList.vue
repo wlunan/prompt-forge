@@ -80,7 +80,7 @@ const sortIcon = computed(() => prompt.sortDir.value === 'desc' ? '↓' : '↑')
     <div v-if="items.length > 0" class="sort-bar">
       <span class="sort-label">排序</span>
       <button
-        v-for="opt in [{v:'createdAt',l:'创建'},{v:'updatedAt',l:'更新'},{v:'usageCount',l:'使用'}] as const"
+        v-for="opt in [{v:'createdAt',l:'创建'},{v:'updatedAt',l:'更新'},{v:'title',l:'名称'},{v:'usageCount',l:'使用'}] as const"
         :key="opt.v"
         :class="['sort-btn', { active: prompt.sortBy.value === opt.v }]"
         @click="toggleSort(opt.v)"

@@ -1,4 +1,4 @@
-import type { PromptItem, Project } from '../types'
+import type { PromptItem, Project, HistoryEntry } from '../types'
 
 /** 获取 KV 存储实例 */
 function getKv() {
@@ -18,6 +18,7 @@ function getKv() {
 const PROMPTS_KEY = 'prompts'
 const PROJECTS_KEY = 'projects'
 const SETTINGS_KEY = 'settings'
+const HISTORY_KEY = 'history'
 
 export async function loadPrompts(): Promise<PromptItem[]> {
   const kv = getKv()
@@ -48,6 +49,23 @@ export async function saveProjects(items: Project[]): Promise<void> {
   const kv = getKv()
   if (kv) kv.set(PROJECTS_KEY, JSON.parse(JSON.stringify(items)))
 }
+
+// ====== History ======
+
+const MAX_HISTORY = 200
+
+export async function loadHistory(): Promise<HistoryEntry[]> {
+  const kv = getKv()
+  if (!kv) return []
+  try { return kv.get(HISTORY_KEY) || [] } catch { return [] }
+}
+
+export async function saveHistory(entries: HistoryEntry[]): Promise<void> {
+  const kv = getKv()
+  if (kv) kv.set(HISTORY_KEY, JSON.parse(JSON.stringify(entries)))
+}
+
+export { MAX_HISTORY }
 
 // ====== Settings ======
 
