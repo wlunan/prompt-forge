@@ -10,6 +10,26 @@ const historyItems = ref<HistoryEntry[]>([])
 const isLoading = ref(false)
 let _initPromise: Promise<void> | null = null
 
+// Debounce 持久化：频繁操作合并为单次写入，降低 I/O 次数
+let _persistTimer: ReturnType<typeof setTimeout> | null = null
+const DEBOUNCE_MS = 300
+
+function schedulePersist() {
+  if (_persistTimer) clearTimeout(_persistTimer)
+  _persistTimer = setTimeout(() => {
+    savePrompts(rawItems.value)
+  }, DEBOUNCE_MS)
+}
+
+// 有挂起的 debounce 时先 flush，确保数据不丢（用于关键操作）
+async function flushPersist() {
+  if (_persistTimer) {
+    clearTimeout(_persistTimer)
+    _persistTimer = null
+  }
+  await savePrompts(rawItems.value)
+}
+
 // 筛选 & 排序状态（模块级，确保所有组件共享同一份）
 const spaceTab = ref<'all' | 'recent' | 'favorite' | 'project' | 'asset' | 'history' | 'trash'>('recent')
 const query = ref('')
@@ -160,7 +180,10 @@ export function usePromptStore() {
 
   async function ensureReady() { await init() }
 
-  async function persistAll() { await savePrompts(rawItems.value) }
+  /** 立即持久化（flush 挂起的 debounce 后写入），用于批量操作或关键操作 */
+  async function persistAll() { await flushPersist() }
+
+  // ====== 历史记录（独立存储，不使用 debounce） ======
 
   async function addHistory(entry: Omit<HistoryEntry, 'id' | 'usedAt'>) {
     const record: HistoryEntry = {
@@ -186,6 +209,8 @@ export function usePromptStore() {
     await saveHistory(historyItems.value)
   }
 
+  // ====== 提示词操作（高频使用 debounce，关键操作立即 flush） ======
+
   async function recordUsage(id: string) {
     const item = rawItems.value.find(i => i.id === id)
     if (item) {
@@ -197,34 +222,34 @@ export function usePromptStore() {
 
   function toggleFavorite(id: string) {
     const item = rawItems.value.find(i => i.id === id)
-    if (item) { item.favorite = !item.favorite; persistAll() }
+    if (item) { item.favorite = !item.favorite; schedulePersist() }
   }
 
   function softDelete(id: string) {
     const item = rawItems.value.find(i => i.id === id)
-    if (item) { item.deleted = true; item.updatedAt = Date.now(); persistAll() }
+    if (item) { item.deleted = true; item.updatedAt = Date.now(); schedulePersist() }
   }
 
   function restore(id: string) {
     const item = rawItems.value.find(i => i.id === id)
-    if (item) { item.deleted = false; item.updatedAt = Date.now(); persistAll() }
+    if (item) { item.deleted = false; item.updatedAt = Date.now(); schedulePersist() }
   }
 
   function hardDelete(id: string) {
     rawItems.value = rawItems.value.filter(i => i.id !== id)
-    persistAll()
+    schedulePersist()
   }
 
   function addItem(item: PromptItem) {
     rawItems.value.push(item)
-    persistAll()
+    schedulePersist()
   }
 
   function updateItem(id: string, patch: Partial<PromptItem>) {
     const idx = rawItems.value.findIndex(i => i.id === id)
     if (idx !== -1) {
       rawItems.value[idx] = { ...rawItems.value[idx], ...patch, updatedAt: Date.now() }
-      persistAll()
+      schedulePersist()
     }
   }
 
