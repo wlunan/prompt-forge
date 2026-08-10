@@ -45,17 +45,24 @@ const baseItems = computed(() => {
   return items
 })
 
-const fuseInstance = computed(() => new Fuse(baseItems.value, {
-  keys: ['title', 'content', 'tags'],
-  threshold: 0.4,
-  ignoreLocation: true,
-  minMatchCharLength: 1,
-}))
+// ====== Fuse.js 懒加载缓存 ======
+const fuseIndex = ref<Fuse<PromptItem> | null>(null)
+
+// baseItems 变化时标记索引失效
+watch(baseItems, () => { fuseIndex.value = null })
 
 const filteredItems = computed(() => {
   const q = prompt.query.value.trim()
   if (!q) return baseItems.value
-  return fuseInstance.value.search(q).map(r => r.item)
+  if (!fuseIndex.value) {
+    fuseIndex.value = new Fuse(baseItems.value, {
+      keys: ['title', 'content', 'tags'],
+      threshold: 0.4,
+      ignoreLocation: true,
+      minMatchCharLength: 1,
+    })
+  }
+  return fuseIndex.value.search(q).map(r => r.item)
 })
 
 watch(selectedUnit, (u) => {

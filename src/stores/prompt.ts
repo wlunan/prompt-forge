@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Fuse from 'fuse.js'
 import type { PromptItem, HistoryEntry } from '../types'
 import { loadPrompts, savePrompts, loadHistory, saveHistory } from '../utils/storage'
@@ -117,23 +117,29 @@ export function usePromptStore() {
     return [...set].sort()
   })
 
-  // ====== Fuse.js 模糊搜索 ======
-  const fuseInstance = computed(() => new Fuse(spaceItems.value, {
-    keys: [
-      { name: 'title', weight: 0.5 },
-      { name: 'content', weight: 0.3 },
-      { name: 'tags', weight: 0.2 },
-    ],
-    threshold: 0.4,
-    includeScore: true,
-    ignoreLocation: true,
-    minMatchCharLength: 1,
-  }))
+  // ====== Fuse.js 模糊搜索（懒加载 + 缓存，仅在搜索时按需构建索引） ======
+  const fuseIndex = ref<Fuse<PromptItem> | null>(null)
+
+  // spaceItems 变化时标记索引失效，下次搜索时惰性重建
+  watch(spaceItems, () => { fuseIndex.value = null })
 
   const filteredCallItems = computed(() => {
     const q = query.value.trim()
     if (!q) return spaceItems.value
-    return fuseInstance.value.search(q).map(r => r.item)
+    if (!fuseIndex.value) {
+      fuseIndex.value = new Fuse(spaceItems.value, {
+        keys: [
+          { name: 'title', weight: 0.5 },
+          { name: 'content', weight: 0.3 },
+          { name: 'tags', weight: 0.2 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+        ignoreLocation: true,
+        minMatchCharLength: 1,
+      })
+    }
+    return fuseIndex.value.search(q).map(r => r.item)
   })
 
   const activeItem = computed(() => {
