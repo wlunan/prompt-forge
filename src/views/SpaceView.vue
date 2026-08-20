@@ -186,36 +186,7 @@ onUnmounted(() => {
 
       <!-- 历史 tab -->
       <template v-else-if="prompt.spaceTab.value === 'history'">
-        <div class="history-view">
-          <div class="history-header">
-            <span class="history-title">使用历史</span>
-            <div class="history-actions">
-              <button
-                :class="['sort-btn', { active: true }]"
-                @click="prompt.historySortDir.value = prompt.historySortDir.value === 'desc' ? 'asc' : 'desc'"
-              >{{ prompt.historySortDir.value === 'desc' ? '最新优先' : '最早优先' }}</button>
-              <button v-if="prompt.historyItems.value.length" class="btn danger" @click="handleClearHistory">清空</button>
-            </div>
-          </div>
-          <div v-if="!prompt.sortedHistoryItems.value.length" class="empty-hint">暂无使用历史</div>
-          <div v-else class="history-list">
-            <div v-for="h in prompt.sortedHistoryItems.value" :key="h.id" class="history-item">
-              <div class="history-info">
-                <div class="history-prompt-title">{{ h.promptTitle }}</div>
-                <div class="history-content-preview">{{ h.copiedContent.slice(0, 120) }}{{ h.copiedContent.length > 120 ? '…' : '' }}</div>
-                <div class="history-meta">
-                  <span class="history-time">{{ new Date(h.usedAt).toLocaleString('zh-CN') }}</span>
-                  <span v-if="h.variableValues" class="history-vars">{{ Object.keys(h.variableValues).length }} 变量</span>
-                </div>
-              </div>
-              <div class="history-item-actions">
-                <button class="btn" :disabled="!prompt.liveItems.value.some(i => i.id === h.promptId)" @click="router.navigateToManage(h.promptId)" title="查看原始提示词">查看</button>
-                <button class="btn" @click="copyText(h.copiedContent); showNotification('✓ 已复制')">复制</button>
-                <button class="btn icon-btn" title="删除" @click="prompt.deleteHistoryEntry(h.id)">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <HistoryPanel />
       </template>
 
       <!-- 回收站 tab -->
