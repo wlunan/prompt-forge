@@ -24,17 +24,21 @@ const emit = defineEmits<{
 const prompt = usePromptStore()
 
 /** 高亮搜索关键词 */
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!)
+}
+
 function highlightText(text: string, q: string): string {
-  if (!q) return text
+  if (!q) return escapeHtml(text)
   // 转义特殊正则字符
   const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   // 逐字符构造正则，允许字符之间有任意内容（模拟 Fuse.js 模糊匹配风格）
   const pattern = escaped.split('').join('[\\s\\S]*?')
   try {
     const regex = new RegExp(`(${pattern})`, 'gi')
-    return text.replace(regex, '<mark>$1</mark>')
+    return escapeHtml(text).replace(regex, '<mark>$1</mark>')
   } catch {
-    return text
+    return escapeHtml(text)
   }
 }
 
