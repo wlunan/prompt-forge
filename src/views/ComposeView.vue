@@ -144,6 +144,11 @@ async function saveAsNew() {
         </div>
       </div>
     </div>
+    <div class="compose-foot">
+      <span class="spacer"></span>
+      <button class="btn" :disabled="!composedText.trim()" @click="copyComposite">复制结果</button>
+      <button class="btn primary" :disabled="!composedText.trim()" @click="saveAsNew">转为提示词</button>
+    </div>
   </div>
 </template>
 
