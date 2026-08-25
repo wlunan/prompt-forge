@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { PromptItem } from '../types'
 import { renderVariables } from '../utils/index'
+import { renderMarkdown } from '../utils/markdown'
 
 const props = defineProps<{
   unit: PromptItem | null
@@ -22,6 +23,10 @@ const preview = computed(() => {
   if (!props.unit?.content) return ''
   return renderVariables(props.unit.content, props.values)
 })
+
+// 预览视图模式：text 纯文本 / markdown 渲染
+const previewMode = ref<'text' | 'markdown'>('text')
+const markdownHtml = computed(() => renderMarkdown(preview.value))
 
 function updateValue(name: string, value: string) {
   emit('update:values', { ...props.values, [name]: value })
@@ -65,8 +70,13 @@ function updateValue(name: string, value: string) {
           <span class="preview-meta">
             <span v-if="unit?.tags?.length" class="tag" v-for="t in (unit?.tags || []).slice(0,3)" :key="t">#{{ t }}</span>
           </span>
+          <div class="mode-toggle">
+            <button :class="['mode-btn', { active: previewMode === 'text' }]" @click="previewMode = 'text'">文本</button>
+            <button :class="['mode-btn', { active: previewMode === 'markdown' }]" @click="previewMode = 'markdown'">Markdown</button>
+          </div>
         </div>
-        <div class="preview-body">{{ preview }}</div>
+        <div v-if="previewMode === 'text'" class="preview-body">{{ preview }}</div>
+        <div v-else class="preview-body markdown-body" v-html="markdownHtml"></div>
       </div>
     </div>
     <!-- 底栏：固定在底部 -->
@@ -201,5 +211,12 @@ function updateValue(name: string, value: string) {
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--pf-font-mono);
+}
+
+/* Markdown 模式下覆盖 .preview-body 的等宽字体与 pre-wrap（全局 .markdown-body 样式见 main.css） */
+.preview-body.markdown-body {
+  font-family: inherit;
+  white-space: normal;
+  line-height: 1.7;
 }
 </style>
