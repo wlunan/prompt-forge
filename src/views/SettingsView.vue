@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Settings, Palette, Download, Info } from 'lucide-vue-next'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useAppSettings } from '../stores/app'
@@ -52,12 +53,12 @@ async function clearAll() {
   <div class="sv">
     <div class="sv-nav">
       <div class="ns">通用</div>
-      <div :class="['ni', { active: tab === 'behavior' }]" @click="tab = 'behavior'">⚙ 行为</div>
-      <div :class="['ni', { active: tab === 'theme' }]" @click="tab = 'theme'">🎨 主题</div>
+      <div :class="['ni', { active: tab === 'behavior' }]" @click="tab = 'behavior'"><Settings :size="15" />行为</div>
+      <div :class="['ni', { active: tab === 'theme' }]" @click="tab = 'theme'"><Palette :size="15" />主题</div>
       <div class="ns">数据</div>
-      <div :class="['ni', { active: tab === 'import-export' }]" @click="tab = 'import-export'">📦 导入/导出</div>
+      <div :class="['ni', { active: tab === 'import-export' }]" @click="tab = 'import-export'"><Download :size="15" />导入/导出</div>
       <div class="ns">关于</div>
-      <div :class="['ni', { active: tab === 'about' }]" @click="tab = 'about'">ℹ 关于</div>
+      <div :class="['ni', { active: tab === 'about' }]" @click="tab = 'about'"><Info :size="15" />关于</div>
     </div>
     <div class="sv-content">
       <div v-if="tab === 'behavior'">
