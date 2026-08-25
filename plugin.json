@@ -9,7 +9,7 @@
   "preload": "dist/preload/services.js",
   "logo": "dist/logo.png",
   "development": {
-    "main": "http://localhost:5174"
+    "main": "http://localhost:5175"
   },
   "features": [
     {

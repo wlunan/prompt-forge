@@ -11,6 +11,7 @@ const sideNav = computed(() => [
   { key: 'history' as const, label: '历史', icon: '📜' },
   { key: 'project' as const, label: '项目', icon: '📁' },
   { key: 'asset' as const, label: '资产', icon: '📦' },
+  { key: 'stats' as const, label: '统计', icon: '📊' },
   { key: 'trash' as const, label: '回收站', icon: '🗑' },
 ])
 
