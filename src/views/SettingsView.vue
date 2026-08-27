@@ -115,7 +115,7 @@ async function clearAll() {
       </div>
       <div v-if="tab === 'about'">
         <h2>关于 PromptForge</h2><p class="sub">AI 工作流增强插件。</p>
-        <div class="about-card"><div class="about-logo">PF</div><div><h3>PromptForge</h3><p class="ver">v1.3.0</p><p class="copy">© 2026</p></div></div>
+        <div class="about-card"><div class="about-logo">PF</div><div><h3>PromptForge</h3><p class="ver">v1.4.0</p><p class="copy">© 2026</p></div></div>
         <p class="privacy">本插件不发起网络请求。数据仅存储在本地。</p>
       </div>
     </div>
