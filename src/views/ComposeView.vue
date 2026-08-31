@@ -55,12 +55,11 @@ const composedText = computed(() => {
 })
 const composedVars = computed(() => extractVariables(composedText.value))
 const renderedText = computed(() => {
-  let t = composedText.value
-  composedVars.value.forEach(v => {
-    const val = varOverrides.value[v.name] || v.defaultValue || `{{${v.name}}}`
-    t = t.replace(new RegExp(`\\{\\{${v.name}(?:=[^}]+)?\\}\\}`, 'g'), val)
-  })
-  return t
+  const values = Object.fromEntries(composedVars.value.map(variable => [
+    variable.name,
+    varOverrides.value[variable.name] || variable.defaultValue || `{{${variable.name}}}`,
+  ]))
+  return renderVariables(composedText.value, values)
 })
 
 function addFrag(f: PromptItem, position: 'front' | 'back' = 'back') {

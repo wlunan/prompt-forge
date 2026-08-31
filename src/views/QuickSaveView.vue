@@ -5,7 +5,6 @@ import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
 import { extractVariables, inferTitle, generateId, detectDuplicate } from '../utils/index'
-import type { PromptItem } from '../types'
 import { showNotification } from '../utils/platform'
 
 const router = useRouter()
