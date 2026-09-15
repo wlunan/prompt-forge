@@ -7,11 +7,13 @@ import { useAppSettings } from '../stores/app'
 import { useTheme } from '../stores/theme'
 import { buildBackup, parseBackup, mergeBackup } from '../utils/backup'
 import { replaceStorageSnapshot } from '../utils/storage'
+import { useModal } from '../composables/useModal'
 
 const promptStore = usePromptStore()
 const projectStore = useProjectStore()
 const appSettings = useAppSettings()
 const theme = useTheme()
+const modal = useModal()
 const tab = ref('behavior')
 
 /** 将已持久化的设置同步到内存 store。 */
@@ -39,7 +41,7 @@ function importJson(e: Event) {
   reader.onload = async () => {
     try {
       const pkg = parseBackup(JSON.parse(reader.result as string))
-      if (!pkg) { alert('格式不正确：不是有效的 PromptForge 备份文件'); return }
+      if (!pkg) { await modal.alert('格式不正确：不是有效的 PromptForge 备份文件'); return }
       await promptStore.ensureReady()
       await projectStore.ensureReady()
       const merged = mergeBackup(pkg, {
@@ -56,14 +58,14 @@ function importJson(e: Event) {
       promptStore.historyItems.value = merged.history
       applyImportedSettings(merged.settings)
       const c = merged.counts
-      alert(`✓ 导入完成：提示词 ${c.prompts} 条、项目 ${c.projects} 个、历史 ${c.history} 条`)
-    } catch { alert('导入失败') }
+      await modal.alert(`✓ 导入完成：提示词 ${c.prompts} 条、项目 ${c.projects} 个、历史 ${c.history} 条`)
+    } catch { await modal.alert('导入失败') }
   }
   reader.readAsText(file)
   ;(e.target as HTMLInputElement).value = ''
 }
 async function clearAll() {
-  if (!confirm('⚠ 确定清空全部？')) return
+  if (!await modal.confirm('⚠ 确定清空全部？此操作不可恢复。', { title: '清空数据' })) return
   await promptStore.ensureReady()
   await projectStore.ensureReady()
   await promptStore.persistAll()
@@ -73,7 +75,7 @@ async function clearAll() {
   projectStore.items.value = []
   appSettings.reset()
   theme.reset()
-  alert('✓ 已清空全部本地数据')
+  await modal.alert('✓ 已清空全部本地数据')
 }
 </script>
 

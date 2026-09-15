@@ -7,6 +7,7 @@ import { useAppSettings } from './stores/app'
 import { useTheme } from './stores/theme'
 import { readClipboardText, showNotification } from './utils/platform'
 import CommandBar from './components/CommandBar.vue'
+import AppModal from './components/AppModal.vue'
 import SpaceView from './views/SpaceView.vue'
 import WizardView from './views/WizardView.vue'
 import ManageView from './views/ManageView.vue'
@@ -94,6 +95,7 @@ const activeComponent = computed(() => viewMap[router.currentView.value] || Spac
       <div class="view-container">
         <component :is="activeComponent" />
       </div>
+      <AppModal />
     </template>
     <div v-else class="loading">
       <div class="loading-spinner"></div>

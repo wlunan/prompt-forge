@@ -6,6 +6,7 @@ import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
 import { extractVariables, inferTitle, generateId, detectDuplicate } from '../utils/index'
 import { showNotification } from '../utils/platform'
+import TagsInput from '../components/TagsInput.vue'
 
 const router = useRouter()
 const promptStore = usePromptStore()
@@ -15,7 +16,6 @@ const source = computed(() => router.quickSaveSource.value === 'selected' ? '选
 const detectedVars = computed(() => extractVariables(content.value))
 const title = ref('')
 const tags = ref<string[]>([])
-const tagInput = ref('')
 const dupPhase = ref<'normal' | 'exact' | 'similar'>('normal')
 const selectedProjectId = ref('')
 
@@ -37,8 +37,6 @@ function handleKey(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveNew() }
   if (e.key === 'Escape') { e.preventDefault(); router.navigateTo('space') }
 }
-function addTag() { const t = tagInput.value.trim(); if (t && !tags.value.includes(t)) tags.value.push(t); tagInput.value = '' }
-function removeTag(t: string) { tags.value = tags.value.filter(x => x !== t) }
 
 async function saveNew() {
   if (dupPhase.value === 'exact' || !title.value.trim()) return
@@ -75,7 +73,7 @@ async function saveNew() {
             <option v-for="p in projectStore.items.value" :key="p.id" :value="p.id">{{ p.group }} / {{ p.name }}</option>
           </select>
         </div>
-        <div class="ff"><label>标签</label><div class="tags-input"><span v-for="t in tags" :key="t" class="chip">{{ t }} <span class="x" @click="removeTag(t)"><X :size="12" /></span></span><input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="添加…" /></div></div>
+        <div class="ff"><label>标签</label><TagsInput v-model="tags" /></div>
       </div>
     </div>
     <div class="qsv-footer">
