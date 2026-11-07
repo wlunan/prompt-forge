@@ -37,6 +37,18 @@ export function extractVariables(text: string): Variable[] {
   return vars
 }
 
+/** 以正文变量为准同步配置，并保留同名变量的已有设置 */
+export function syncVariablesFromContent(text: string, existingVars: Variable[] = []): Variable[] {
+  return extractVariables(text).map(detected => {
+    const existing = existingVars.find(v => v.name === detected.name)
+    return {
+      name: detected.name,
+      required: existing?.required ?? detected.required,
+      defaultValue: existing?.defaultValue ?? detected.defaultValue,
+    }
+  })
+}
+
 /** 替换文本中的变量为实际值 */
 export function renderVariables(text: string, values: Record<string, string>): string {
   if (!text) return ''

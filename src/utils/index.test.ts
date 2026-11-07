@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractVariables, renderVariables } from './index'
+import { extractVariables, renderVariables, syncVariablesFromContent } from './index'
 
 describe('变量解析与渲染', () => {
   it('同时支持双花括号和美元花括号语法', () => {
@@ -32,5 +32,18 @@ describe('变量解析与渲染', () => {
     ])
     expect(renderVariables(template, { role: '工程师', topic: '导入', language: '中文' }))
       .toBe('错误示例：{{role} 和 ${topic}}，正确示例：中文。')
+  })
+})
+
+describe('正文变量同步', () => {
+  it('删除正文变量后不再保留旧配置，并继承同名变量设置', () => {
+    const existing = [
+      { name: 'role', required: false, defaultValue: '架构师' },
+      { name: 'removed', required: true, defaultValue: '' },
+    ]
+
+    expect(syncVariablesFromContent('请以 {{role}} 的身份处理任务。', existing)).toEqual([
+      { name: 'role', required: false, defaultValue: '架构师' },
+    ])
   })
 })

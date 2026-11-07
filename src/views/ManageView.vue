@@ -5,7 +5,7 @@ import Fuse from 'fuse.js'
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
-import { extractVariables } from '../utils/index'
+import { syncVariablesFromContent } from '../utils/index'
 import type { PromptItem, Variable, PromptType, Snapshot } from '../types'
 import { showNotification } from '../utils/platform'
 import { useModal } from '../composables/useModal'
@@ -149,11 +149,7 @@ async function handleRestoreSnapshot(snap: Snapshot) {
     createdAt: now,
   })
   // 从快照内容重新提取变量（只保留模板中实际存在的变量）
-  const detected = extractVariables(snap.body)
-  const vars: Variable[] = detected.map(d => {
-    const existing = u.variables?.find(v => v.name === d.name)
-    return { name: d.name, required: existing?.required ?? d.required, defaultValue: existing?.defaultValue ?? d.defaultValue }
-  })
+  const vars = syncVariablesFromContent(snap.body, u.variables)
   const newVersion = (u.version || 1) + 1
   try {
     await prompt.updateItem(u.id, { content: snap.body, variables: vars, version: newVersion, snapshots })
@@ -168,15 +164,7 @@ async function handleRestoreSnapshot(snap: Snapshot) {
 async function saveEdit() {
   const u = selectedUnit.value; if (!u) return
   const bodyChanged = editBody.value !== u.content
-  const detected = extractVariables(editBody.value)
-  const seen = new Set<string>()
-  const vars: Variable[] = []
-  for (const d of detected) {
-    const existing = editVars.value.find(v => v.name === d.name)
-    vars.push({ name: d.name, required: existing?.required ?? d.required, defaultValue: existing?.defaultValue ?? d.defaultValue })
-    seen.add(d.name)
-  }
-  for (const v of editVars.value) { if (!seen.has(v.name)) { vars.push({ ...v }); seen.add(v.name) } }
+  const vars = syncVariablesFromContent(editBody.value, editVars.value)
   const newVersion = bodyChanged ? (u.version || 1) + 1 : (u.version || 1)
   const now = Date.now()
   const snapshots = u.snapshots ? [...u.snapshots] : []
