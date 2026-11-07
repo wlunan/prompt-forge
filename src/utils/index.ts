@@ -49,6 +49,24 @@ export function syncVariablesFromContent(text: string, existingVars: Variable[] 
   })
 }
 
+/** 计算变量实际生效值：空白输入回退到默认值，无默认值则为空 */
+export function resolveVariableValues(variables: Variable[], values: Record<string, string>): Record<string, string> {
+  return variables.reduce((resolved, variable) => {
+    const input = values[variable.name]
+    const defaultValue = variable.defaultValue
+    resolved[variable.name] = input?.trim()
+      ? input
+      : defaultValue?.trim() ? defaultValue : ''
+    return resolved
+  }, {} as Record<string, string>)
+}
+
+/** 查找应用默认值后仍缺少内容的必填变量 */
+export function getMissingRequiredVariables(variables: Variable[], values: Record<string, string>): Variable[] {
+  const resolved = resolveVariableValues(variables, values)
+  return variables.filter(variable => variable.required && !resolved[variable.name].trim())
+}
+
 /** 替换文本中的变量为实际值 */
 export function renderVariables(text: string, values: Record<string, string>): string {
   if (!text) return ''

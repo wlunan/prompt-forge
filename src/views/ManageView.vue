@@ -76,9 +76,6 @@ watch(selectedUnit, (u) => {
   editProjectId.value = u.projectId || ''
 }, { immediate: true })
 
-function addVar() { editVars.value.push({ name: `var_${editVars.value.length + 1}`, required: true, defaultValue: '' }) }
-function removeVar(i: number) { editVars.value.splice(i, 1) }
-
 function toggleFavorite(id: string) { prompt.toggleFavorite(id) }
 
 function toggleSelect(id: string) {
@@ -290,8 +287,6 @@ onMounted(() => {
           v-else-if="editTab === 'vars'"
           :editVars="editVars"
           @update:editVars="editVars = $event"
-          @addVar="addVar"
-          @removeVar="removeVar"
         />
 
         <ManageVersionsTab

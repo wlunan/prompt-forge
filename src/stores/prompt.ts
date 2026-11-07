@@ -99,7 +99,7 @@ export function usePromptStore() {
     phase.value = 'fill'
     variableValues.value = {}
     for (const variable of item.variables || []) {
-      variableValues.value[variable.name] = variable.defaultValue || ''
+      variableValues.value[variable.name] = variable.defaultValue ?? ''
     }
   }
 
