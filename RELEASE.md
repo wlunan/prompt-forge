@@ -44,7 +44,7 @@ git status
 | ------------------------- | --------------------------------- | ------------------------------------------------------------------- |
 | `package.json`          | 项目版本                          | `"version": "x.y.z"`                                              |
 | `plugin.json`（根目录） | 开发模式 manifest                 | `"version": "x.y.z"`                                              |
-|  `public/plugin.json`   | **打包进 .zpx 的 manifest** | vite 会把`public/` 原样复制到 `dist/`，这是真正随包发布的版本号 |
+| `public/plugin.json`    | **打包进 .zpx 的 manifest** | vite 会把`public/` 原样复制到 `dist/`，这是真正随包发布的版本号 |
 
 > ⚠️ 三处版本号必须一致，遗漏会导致发布包与实际版本不符。
 
