@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { usePromptStore } from '../stores/prompt'
 import { showNotification } from '../utils/platform'
+import { useModal } from '../composables/useModal'
 
 const prompt = usePromptStore()
+const modal = useModal()
 
 async function restoreItem(id: string) {
   try {
@@ -13,7 +15,8 @@ async function restoreItem(id: string) {
   }
 }
 
-async function deleteItem(id: string) {
+async function deleteItem(id: string, title: string) {
+  if (!await modal.confirm(`确定永久删除「${title}」？此操作不可恢复。`)) return
   try {
     await prompt.hardDelete(id)
     showNotification('已永久删除')
@@ -33,7 +36,7 @@ async function deleteItem(id: string) {
       </div>
       <div class="trash-actions">
         <button class="btn" @click="restoreItem(item.id)">恢复</button>
-        <button class="btn danger" @click="deleteItem(item.id)">永久删除</button>
+        <button class="btn danger" @click="deleteItem(item.id, item.title)">永久删除</button>
       </div>
     </div>
   </div>

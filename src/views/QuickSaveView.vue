@@ -17,7 +17,9 @@ const detectedVars = computed(() => extractVariables(content.value))
 const title = ref('')
 const tags = ref<string[]>([])
 const dupPhase = ref<'normal' | 'exact' | 'similar'>('normal')
+const similarItems = ref<Array<{ id: string; score: number }>>([])
 const selectedProjectId = ref('')
+const titleError = ref(false)
 
 onMounted(async () => {
   await promptStore.ensureReady()
@@ -27,8 +29,9 @@ onMounted(async () => {
   const ctxProjectId = router.quickSaveProjectId.value
   if (ctxProjectId) selectedProjectId.value = ctxProjectId
   try {
-    const r = await detectDuplicate(promptStore.rawItems.value.map(i => ({ content: i.content, id: i.id })), content.value, '')
+    const r = await detectDuplicate(promptStore.liveItems.value.map(i => ({ content: i.content, id: i.id })), content.value, '')
     dupPhase.value = r.phase
+    similarItems.value = r.similarItems
   } catch {}
   window.addEventListener('keydown', handleKey)
 })
@@ -39,7 +42,9 @@ function handleKey(e: KeyboardEvent) {
 }
 
 async function saveNew() {
-  if (dupPhase.value === 'exact' || !title.value.trim()) return
+  if (dupPhase.value === 'exact') { showNotification('完全相同的内容已存在，无法重复保存'); return }
+  if (!title.value.trim()) { titleError.value = true; showNotification('请填写标题'); return }
+  titleError.value = false
   try {
     await promptStore.ensureReady()
     const now = Date.now()
@@ -69,8 +74,12 @@ async function saveNew() {
         <div class="preview-body">{{ content }}</div>
       </div>
       <div v-if="dupPhase === 'exact'" class="dup-banner"><TriangleAlert :size="14" />完全相同的内容已存在</div>
+      <div v-else-if="dupPhase === 'similar'" class="similar-banner">
+        <TriangleAlert :size="14" />
+        <span>发现 {{ similarItems.length }} 条相似提示词，继续保存前请确认不是重复内容。</span>
+      </div>
       <div class="qsv-form">
-        <div class="ff span-2"><label>标题 *</label><input v-model="title" :disabled="dupPhase === 'exact'" /></div>
+        <div class="ff span-2"><label>标题 *</label><input v-model="title" :disabled="dupPhase === 'exact'" :class="{ 'has-error': titleError && !title.trim() }" @input="titleError = false" /></div>
         <div class="ff"><label>归属项目</label>
           <select v-model="selectedProjectId" class="proj-select">
             <option value="">无项目（资产）</option>
@@ -102,6 +111,8 @@ async function saveNew() {
 .ff label { font-size: 12px; font-weight: 600; color: var(--pf-text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
 .ff input { height: 34px; padding: 0 12px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); font-size: 13px; }
 .ff input:focus { border-color: var(--pf-accent); outline: none; }
+.ff input.has-error { border-color: var(--pf-danger); }
+.similar-banner { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: var(--pf-radius-sm); background: var(--pf-warning-soft, #FEF3C7); color: var(--pf-warning, #D97706); border: 1px solid var(--pf-warning, #D97706); font-size: 12.5px; }
 .tags-input { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 8px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); min-height: 34px; align-items: center; }
 .chip { background: var(--pf-surface-raised); padding: 2px 8px; border-radius: var(--pf-radius-pill); font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px; }
 .chip .x { cursor: pointer; opacity: 0.5; }

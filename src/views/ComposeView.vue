@@ -4,7 +4,7 @@ import { Pin, Shield, Paperclip, ChevronUp, ChevronDown, X } from 'lucide-vue-ne
 import { useRouter } from '../stores/router'
 import { usePromptStore } from '../stores/prompt'
 import { useAppSettings } from '../stores/app'
-import { extractVariables, renderVariables, generateId } from '../utils/index'
+import { extractVariables, getMissingRequiredVariables, renderVariables, resolveVariableValues, generateId } from '../utils/index'
 import { copyText, showNotification, hideMainWindow } from '../utils/platform'
 import { useModal } from '../composables/useModal'
 import type { PromptItem } from '../types'
@@ -57,10 +57,7 @@ const composedText = computed(() => {
 })
 const composedVars = computed(() => extractVariables(composedText.value))
 const renderedText = computed(() => {
-  const values = Object.fromEntries(composedVars.value.map(variable => [
-    variable.name,
-    varOverrides.value[variable.name] || variable.defaultValue || `{{${variable.name}}}`,
-  ]))
+  const values = resolveVariableValues(composedVars.value, varOverrides.value)
   return renderVariables(composedText.value, values)
 })
 
@@ -71,12 +68,21 @@ function addFrag(f: PromptItem, position: 'front' | 'back' = 'back') {
 function removeFrag(i: number) { canvasFrags.value.splice(i, 1) }
 function moveFrag(i: number, dir: 'up' | 'down') {
   const arr = canvasFrags.value
-  const t = dir === 'up' ? i - 1 : i + 1
-  if (t < 0 || t >= arr.length) return
-  ;[arr[i], arr[t]] = [arr[t], arr[i]]
+  const item = arr[i]
+  if (!item) return
+  // 只在同一前置/后置分组内交换，避免混排时跨组无效移动
+  const groupIndices: number[] = []
+  arr.forEach((cur, idx) => { if (cur.position === item.position) groupIndices.push(idx) })
+  const posInGroup = groupIndices.indexOf(i)
+  const targetPos = dir === 'up' ? posInGroup - 1 : posInGroup + 1
+  if (targetPos < 0 || targetPos >= groupIndices.length) return
+  const targetIdx = groupIndices[targetPos]
+  ;[arr[i], arr[targetIdx]] = [arr[targetIdx], arr[i]]
 }
 
 async function copyComposite() {
+  const missing = getMissingRequiredVariables(composedVars.value, varOverrides.value)
+  if (missing.length > 0) { showNotification(`请填写: ${missing.map(v => v.name).join(', ')}`); return }
   try {
     await copyText(renderedText.value)
     showNotification('✓ 已复制')
