@@ -10,7 +10,7 @@ const router = useRouter()
 const modal = useModal()
 
 async function handleClearHistory() {
-  if (await modal.confirm('确定清空所有历史记录？')) {
+  if (await modal.confirm('确定清空所有历史记录？', { danger: true })) {
     try {
       await prompt.clearHistory()
       showNotification('✓ 已清空')
@@ -46,7 +46,7 @@ async function deleteHistory(id: string) {
         <button
           :class="['sort-btn', { active: true }]"
           @click="prompt.historySortDir.value = prompt.historySortDir.value === 'desc' ? 'asc' : 'desc'"
-        >{{ prompt.historySortDir.value === 'desc' ? '最新优先' : '最早优先' }}</button>
+        >{{ prompt.historySortDir.value === 'desc' ? '↓ 最新优先' : '↑ 最早优先' }}</button>
         <button v-if="prompt.historyItems.value.length" class="btn danger" @click="handleClearHistory">清空</button>
       </div>
     </div>
@@ -94,7 +94,7 @@ async function deleteHistory(id: string) {
 .history-item:hover { border-color: var(--pf-border-hover); background: var(--pf-surface-hover); }
 .history-info { flex: 1; min-width: 0; }
 .history-prompt-title { font-size: 13px; font-weight: 600; color: var(--pf-text); margin-bottom: 4px; }
-.history-content-preview { font-size: 12px; color: var(--pf-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; max-width: 500px; }
+.history-content-preview { font-size: 12px; color: var(--pf-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; max-width: 500px; user-select: text; }
 .history-meta { display: flex; gap: 8px; align-items: center; }
 .history-time { font-size: 11px; color: var(--pf-text-faint); font-family: var(--pf-font-mono); }
 .history-vars { max-width: 500px; margin-top: 6px; font-size: 11px; color: var(--pf-accent); font-weight: 500; }

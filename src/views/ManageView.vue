@@ -41,6 +41,17 @@ const filterScope = ref<string>('')
 
 const selectedUnit = computed(() => prompt.rawItems.value.find(i => i.id === selectedId.value) || null)
 
+const isDirty = computed(() => {
+  const u = selectedUnit.value
+  if (!u) return false
+  return editBody.value !== (u.content || '')
+    || editTitle.value !== (u.title || '')
+    || JSON.stringify(editTags.value) !== JSON.stringify(u.tags || [])
+    || JSON.stringify(editVars.value) !== JSON.stringify(u.variables || [])
+    || editType.value !== ((u.type as PromptType) || 'prompt')
+    || editProjectId.value !== (u.projectId || '')
+})
+
 const baseItems = computed(() => {
   let items = prompt.liveItems.value
   if (filterType.value) items = items.filter(i => i.type === filterType.value)
@@ -94,7 +105,7 @@ function selectAll() {
 
 async function batchDelete() {
   if (!selectedIds.value.size) return
-  if (!await modal.confirm(`确定删除选中的 ${selectedIds.value.size} 项？`)) return
+  if (!await modal.confirm(`确定删除选中的 ${selectedIds.value.size} 项？`, { danger: true })) return
   const previous = JSON.parse(JSON.stringify(prompt.rawItems.value)) as PromptItem[]
   let changed = false
   const now = Date.now()
@@ -130,8 +141,11 @@ async function batchMoveProject(e: Event) {
   }
 }
 
-function selectItem(id: string) {
-  if (selectMode.value) { toggleSelect(id) } else { selectedId.value = id; editTab.value = 'content' }
+async function selectItem(id: string) {
+  if (selectMode.value) { toggleSelect(id); return }
+  if (id === selectedId.value) return
+  if (isDirty.value && !await modal.confirm('有未保存的修改，切换后将丢失？')) return
+  selectedId.value = id; editTab.value = 'content'
 }
 
 async function handleRestoreSnapshot(snap: Snapshot) {
@@ -185,7 +199,7 @@ async function saveEdit() {
 
 async function deleteUnit() {
   const u = selectedUnit.value; if (!u) return
-  if (!await modal.confirm(`确定删除「${u.title}」？`)) return
+  if (!await modal.confirm(`确定删除「${u.title}」？`, { danger: true })) return
   try {
     await prompt.softDelete(u.id)
     selectedId.value = ''
@@ -264,6 +278,7 @@ onMounted(() => {
         <button :class="{ active: editTab === 'versions' }" @click="editTab = 'versions'">版本</button>
         <button :class="{ active: editTab === 'stats' }" @click="editTab = 'stats'">统计</button>
         <span class="ti">v{{ selectedUnit.version || 1 }}</span>
+        <span v-if="isDirty" class="dirty-badge">● 未保存</span>
       </div>
       <div class="ec">
         <ManageContentTab
@@ -340,18 +355,19 @@ onMounted(() => {
 .m-cb { flex-shrink: 0; width: 14px; height: 14px; accent-color: var(--pf-accent); }
 .mi-body { flex: 1; min-width: 0; }
 .mi-title { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.star { color: var(--pf-warning); font-size: 11px; }
+.star { color: var(--pf-warning-strong); font-size: 11px; }
 .mi-meta { display: flex; gap: 6px; align-items: center; font-size: 11px; color: var(--pf-text-muted); margin-top: 2px; }
 .type-tag { background: var(--pf-accent-soft); color: var(--pf-accent); padding: 0 5px; border-radius: 3px; font-size: 10px; font-weight: 600; }
 .spacer { flex: 1; }
 .cnt { color: var(--pf-accent); font-weight: 600; }
 .mi-fav { flex-shrink: 0; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--pf-text-faint); padding: 0 2px; line-height: 1; }
-.mi-fav:hover { color: var(--pf-warning); }
+.mi-fav:hover { color: var(--pf-warning-strong); }
 
 .m-foot { padding: 8px; border-top: 1px solid var(--pf-border); }
 .m-foot .btn { width: 100%; justify-content: center; }
 .m-editor { display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--pf-surface); position: relative; }
 .tabs { height: 36px; display: flex; align-items: center; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--pf-border); background: var(--pf-bg-elevated); }
+.dirty-badge { margin-left: 6px; font-size: 10px; color: var(--pf-warning-strong, #B45309); font-weight: 600; white-space: nowrap; }
 .tabs button { border: 0; background: none; color: var(--pf-text-muted); padding: 4px 12px; font-size: 13px; font-weight: 500; height: 36px; cursor: pointer; }
 .tabs button.active { color: var(--pf-accent); font-weight: 600; }
 .ti { margin-left: auto; font-size: 11px; color: var(--pf-text-faint); font-family: var(--pf-font-mono); }
@@ -363,13 +379,15 @@ onMounted(() => {
 @media (max-width: 720px) {
   .manage {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(180px, 42%) minmax(0, 58%);
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow-y: auto;
   }
-  .m-sidebar { border-right: 0; border-bottom: 1px solid var(--pf-border); }
-  .m-editor { min-height: 0; }
+  .m-sidebar { border-right: 0; border-bottom: 1px solid var(--pf-border); max-height: 40vh; overflow-y: auto; }
+  .m-editor { min-height: 0; overflow-y: auto; }
   .tabs { overflow-x: auto; padding: 0 8px; }
   .tabs button { flex: 0 0 auto; padding: 4px 8px; }
   .ec { padding: 12px; }
   .m-empty { min-height: 0; }
+  .ef { position: sticky; bottom: 0; z-index: 2; }
 }
 </style>

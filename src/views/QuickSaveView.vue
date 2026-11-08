@@ -85,6 +85,15 @@ async function saveNew() {
         <TriangleAlert :size="14" />
         <span>发现 {{ similarItems.length }} 条相似提示词，继续保存前请确认不是重复内容。</span>
       </div>
+      <details v-if="dupPhase === 'similar' && similarItems.length" class="similar-details">
+        <summary>查看相似条目</summary>
+        <div class="similar-list">
+          <div v-for="s in similarItems" :key="s.id" class="similar-item">
+            <span class="si-title">{{ promptStore.liveItems.value.find(i => i.id === s.id)?.title || '未知' }}</span>
+            <span class="si-score">{{ Math.round(s.score * 100) }}% 相似</span>
+          </div>
+        </div>
+      </details>
       <div class="qsv-form">
         <div class="ff span-2"><label>标题 *</label><input v-model="title" :disabled="dupPhase === 'exact'" :class="{ 'has-error': titleError && !title.trim() }" @input="titleError = false" /></div>
         <div class="ff"><label>归属项目</label>
@@ -97,9 +106,10 @@ async function saveNew() {
       </div>
     </div>
     <div class="qsv-footer">
-      <button class="btn primary" @click="saveNew">保存</button>
+      <button class="btn" @click="router.navigateTo('space')">取消</button>
       <span class="spacer"></span>
-      <span class="hint-t"><kbd>Esc</kbd> 取消 <kbd>Ctrl+S</kbd> 保存</span>
+      <button class="btn primary" :disabled="dupPhase === 'exact'" @click="saveNew">保存</button>
+      <span class="hint-t"><kbd>Ctrl+S</kbd> 保存</span>
     </div>
   </div>
 </template>
@@ -119,12 +129,14 @@ async function saveNew() {
 .ff input { height: 34px; padding: 0 12px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); font-size: 13px; }
 .ff input:focus { border-color: var(--pf-accent); outline: none; }
 .ff input.has-error { border-color: var(--pf-danger); }
-.similar-banner { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: var(--pf-radius-sm); background: var(--pf-warning-soft, #FEF3C7); color: var(--pf-warning, #D97706); border: 1px solid var(--pf-warning, #D97706); font-size: 12.5px; }
-.tags-input { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 8px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); min-height: 34px; align-items: center; }
-.chip { background: var(--pf-surface-raised); padding: 2px 8px; border-radius: var(--pf-radius-pill); font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px; }
-.chip .x { cursor: pointer; opacity: 0.5; }
-.chip .x:hover { opacity: 1; color: var(--pf-danger); }
-.tags-input input { flex: 1; min-width: 50px; height: 24px !important; padding: 0 !important; border: 0 !important; }
+.similar-banner { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: var(--pf-radius-sm); background: var(--pf-warning-soft); color: var(--pf-warning-strong); border: 1px solid var(--pf-warning-strong); font-size: 12.5px; }
+.similar-details { margin-top: 6px; font-size: 12px; }
+.similar-details summary { cursor: pointer; color: var(--pf-accent); padding: 4px 0; }
+.similar-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; padding: 8px 10px; background: var(--pf-surface); border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); }
+.similar-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+.si-title { color: var(--pf-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.si-score { color: var(--pf-text-muted); font-size: 11px; flex-shrink: 0; }
+
 .proj-select { height: 34px; padding: 0 12px; border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm); background: var(--pf-surface); font-size: 13px; color: var(--pf-text); cursor: pointer; }
 .proj-select:focus { border-color: var(--pf-accent); outline: none; }
 .qsv-footer { height: 48px; flex-shrink: 0; border-top: 1px solid var(--pf-border); background: var(--pf-bg-elevated); display: flex; align-items: center; gap: 10px; padding: 0 20px; }

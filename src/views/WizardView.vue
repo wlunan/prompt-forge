@@ -118,7 +118,7 @@ async function save(type?: 'prompt' | 'snippet' | 'template' | 'constraint') {
       <button v-if="step === 1" class="btn" @click="save()" :disabled="saving || !content.trim()"><Zap :size="14" />快速保存</button>
       <template v-if="step < 3"><button class="btn primary" @click="next">下一步<ArrowRight :size="14" /></button></template>
       <template v-else>
-        <button class="btn" @click="save('snippet')">片段</button>
+        <button class="btn" @click="save('snippet')">存为片段</button>
         <button class="btn primary" @click="save()">发布</button>
       </template>
     </div>

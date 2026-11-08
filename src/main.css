@@ -12,9 +12,10 @@
 
   --pf-success: #00B894;
   --pf-success-soft: rgba(0, 184, 148, 0.08);
-  --pf-danger: #E17055;
-  --pf-danger-soft: rgba(225, 112, 85, 0.08);
+  --pf-danger: #DC2626;
+  --pf-danger-soft: rgba(220, 38, 38, 0.08);
   --pf-warning: #FDCB6E;
+  --pf-warning-strong: #B45309;
   --pf-warning-soft: rgba(253, 203, 110, 0.1);
 
   --pf-radius: 12px;
@@ -46,7 +47,7 @@
   --pf-text: #212529;
   --pf-text-secondary: #495057;
   --pf-text-muted: #868E96;
-  --pf-text-faint: #CED4DA;
+  --pf-text-faint: #8A9199;
 
   --pf-shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
   --pf-shadow-md: 0 4px 12px rgba(0,0,0,0.08);
@@ -67,10 +68,11 @@
   --pf-text: #E9ECEF;
   --pf-text-secondary: #ADB5BD;
   --pf-text-muted: #868E96;
-  --pf-text-faint: #495057;
+  --pf-text-faint: #6C757D;
 
+  --pf-warning-strong: #FCD34D;
   --pf-success-soft: rgba(0, 184, 148, 0.15);
-  --pf-danger-soft: rgba(225, 112, 85, 0.15);
+  --pf-danger-soft: rgba(220, 38, 38, 0.15);
   --pf-warning-soft: rgba(253, 203, 110, 0.15);
 
   --pf-shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
@@ -113,6 +115,16 @@ select:focus-visible {
   outline: 2px solid var(--pf-accent);
   outline-offset: 2px;
 }
+
+/* ========= 类型选择器 ========= */
+.type-btn {
+  padding: 5px 14px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--pf-border); border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface); color: var(--pf-text-muted);
+  cursor: pointer; transition: all 0.12s;
+}
+.type-btn:hover { border-color: var(--pf-border-hover); color: var(--pf-text); }
+.type-btn.active { background: var(--pf-accent-soft); color: var(--pf-accent); border-color: var(--pf-accent); font-weight: 600; }
 
 /* ========= 按钮 ========= */
 .btn {

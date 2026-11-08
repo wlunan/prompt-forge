@@ -24,7 +24,10 @@ const showMoveGroup = ref(false)
 
 function onProjectContextMenu(e: MouseEvent, project: Project) {
   e.preventDefault()
-  ctxMenu.value = { visible: true, x: e.clientX, y: e.clientY, project }
+  const menuW = 180, menuH = 120
+  const x = Math.min(e.clientX, window.innerWidth - menuW - 4)
+  const y = Math.min(e.clientY, window.innerHeight - menuH - 4)
+  ctxMenu.value = { visible: true, x, y, project }
   showMoveGroup.value = false
 }
 
@@ -47,7 +50,7 @@ async function createProject() {
 async function deleteProject(p: Project) {
   const memberCount = prompt.liveItems.value.filter(i => i.projectId === p.id).length
   const hint = memberCount > 0 ? `，其下 ${memberCount} 条提示词将转为"资产"` : ''
-  if (!await modal.confirm(`确定删除项目「${p.name}」？${hint}`)) return
+  if (!await modal.confirm(`确定删除项目「${p.name}」？${hint}`, { danger: true })) return
   const previousPrompts = JSON.parse(JSON.stringify(prompt.rawItems.value)) as PromptItem[]
   let changed = false
   prompt.rawItems.value.forEach(item => {
@@ -162,12 +165,12 @@ defineExpose({ closeCtxMenu })
 .ctx-menu { position: fixed; z-index: 9999; min-width: 160px; padding: 4px 0; background: var(--pf-bg-elevated); border: 1px solid var(--pf-border); border-radius: var(--pf-radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
 .ctx-menu-title { font-size: 11px; font-weight: 700; color: var(--pf-text-faint); padding: 6px 12px 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 .ctx-menu-divider { height: 1px; background: var(--pf-border); margin: 4px 0; }
-.ctx-menu-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 13px; color: var(--pf-text); cursor: pointer; transition: background 0.1s; }
+.ctx-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 12px; font-size: 13px; color: var(--pf-text); cursor: pointer; transition: background 0.1s; border: none; background: none; text-align: left; }
 .ctx-menu-item:hover { background: var(--pf-surface-hover); }
 .ctx-menu-item.active { color: var(--pf-accent); font-weight: 600; }
 .ctx-check { width: 14px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.ctx-menu-item.danger { color: var(--pf-danger, #ef4444); }
-.ctx-menu-item.danger:hover { background: rgba(239, 68, 68, 0.08); }
+.ctx-menu-item.danger { color: var(--pf-danger); }
+.ctx-menu-item.danger:hover { background: var(--pf-danger-soft); }
 
 @media (max-width: 700px) {
   .project-panel { width: 150px; }

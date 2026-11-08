@@ -27,6 +27,15 @@ const preview = computed(() => {
 
 watch(() => props.unit?.id, () => { submitAttempted.value = false })
 
+// 自动聚焦第一个变量输入框
+function focusFirstInput() {
+  requestAnimationFrame(() => {
+    const el = document.querySelector('.fill-form input, .fill-form textarea') as HTMLElement
+    el?.focus()
+  })
+}
+watch(() => props.unit?.id, () => { if (variables.value.length) focusFirstInput() }, { immediate: true })
+
 // 预览视图模式：text 纯文本 / markdown 渲染
 const previewMode = ref<'text' | 'markdown'>('text')
 const markdownHtml = computed(() => renderMarkdown(preview.value))
@@ -148,6 +157,7 @@ function onTextareaInput(name: string, e: Event) {
           <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
         </svg>
         复制
+        <kbd class="btn-kbd">Ctrl</kbd>+<kbd class="btn-kbd">Enter</kbd>
       </button>
     </div>
   </div>
@@ -162,7 +172,7 @@ function onTextareaInput(name: string, e: Event) {
 .fill-body {
   flex: 1; min-height: 0;
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 2fr;
+  grid-template-columns: minmax(0, 1fr) 2fr;
   overflow: hidden;
 }
 /* 无变量：隐藏表单，预览单列占满全部空间 */
@@ -204,7 +214,6 @@ function onTextareaInput(name: string, e: Event) {
   font-size: 12px; font-weight: 600;
   color: var(--pf-text-secondary);
   display: flex; align-items: center; gap: 6px;
-  text-transform: uppercase; letter-spacing: 0.04em;
 }
 .req { color: var(--pf-danger); }
 .hint {
@@ -263,6 +272,7 @@ function onTextareaInput(name: string, e: Event) {
   flex-shrink: 0;
 }
 .spacer { flex: 1; }
+.btn-kbd { display: inline-block; margin: 0 1px; padding: 1px 4px; font-size: 9px; font-family: var(--pf-font-mono); border-radius: 3px; background: rgba(255,255,255,0.15); opacity: 0.8; }
 
 /* 右侧预览 */
 .fill-preview {
@@ -290,6 +300,7 @@ function onTextareaInput(name: string, e: Event) {
 }
 .preview-body {
   flex: 1; min-height: 0; overflow-y: auto;
+  user-select: text;
   padding: 16px 20px;
   font-size: 13.5px; line-height: 1.7;
   color: var(--pf-text-secondary);
@@ -305,10 +316,11 @@ function onTextareaInput(name: string, e: Event) {
   line-height: 1.7;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 880px) {
   .fill-body:not(.single) {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(180px, 1fr) minmax(180px, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    overflow-y: auto;
   }
   .fill-form { border-right: 0; border-bottom: 1px solid var(--pf-border); }
   .form-header, .preview-header { padding: 10px 12px; }

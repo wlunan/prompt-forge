@@ -253,7 +253,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.space-view { width: 100%; flex: 1; min-height: 0; display: flex; background: var(--pf-bg); user-select: none; overflow: hidden; }
+.space-view { width: 100%; flex: 1; min-height: 0; display: flex; background: var(--pf-bg); overflow: hidden; }
 
 /* 主区域 */
 .space-main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
