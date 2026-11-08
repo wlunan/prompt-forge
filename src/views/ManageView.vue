@@ -15,6 +15,8 @@ import ManageVarsTab from '../components/ManageVarsTab.vue'
 import ManageVersionsTab from '../components/ManageVersionsTab.vue'
 import ManageStatsTab from '../components/ManageStatsTab.vue'
 
+const MAX_SNAPSHOTS = 20
+
 const router = useRouter()
 const prompt = usePromptStore()
 const projectStore = useProjectStore()
@@ -147,6 +149,7 @@ async function handleRestoreSnapshot(snap: Snapshot) {
   })
   // 从快照内容重新提取变量（只保留模板中实际存在的变量）
   const vars = syncVariablesFromContent(snap.body, u.variables)
+  if (snapshots.length > MAX_SNAPSHOTS) snapshots.splice(0, snapshots.length - MAX_SNAPSHOTS)
   const newVersion = (u.version || 1) + 1
   try {
     await prompt.updateItem(u.id, { content: snap.body, variables: vars, version: newVersion, snapshots })
@@ -166,6 +169,7 @@ async function saveEdit() {
   const now = Date.now()
   const snapshots = u.snapshots ? [...u.snapshots] : []
   if (bodyChanged) { snapshots.push({ version: u.version || 1, body: u.content, note: '编辑前保存', createdAt: now }) }
+  if (snapshots.length > MAX_SNAPSHOTS) snapshots.splice(0, snapshots.length - MAX_SNAPSHOTS)
   try {
     await prompt.updateItem(u.id, {
       title: editTitle.value.trim() || u.title,

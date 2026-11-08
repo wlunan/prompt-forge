@@ -146,11 +146,11 @@ export function usePromptStore() {
     })
   }
 
-  function toggleFavorite(id: string) {
-    const item = rawItems.value.find(candidate => candidate.id === id)
-    if (!item) return
-    item.favorite = !item.favorite
-    persistence.schedulePromptPersist()
+  async function toggleFavorite(id: string) {
+    await persistence.commitPromptMutation(() => {
+      const item = rawItems.value.find(candidate => candidate.id === id)
+      if (item) item.favorite = !item.favorite
+    })
   }
 
   async function softDelete(id: string) {
