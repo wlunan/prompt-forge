@@ -17,7 +17,7 @@ git status
 
 - 若分支已分叉（diverged），先 rebase：
   ```powershell
-  git pull --rebase origin prompt-forge
+  git pull --rebase origin main
   ```
 - 注意检查与远程提交是否有重叠改动，有冲突需手动解决。
 
@@ -119,7 +119,7 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 git add -A
 git commit -m "release: vX.Y.Z"
 git tag vX.Y.Z
-git push origin prompt-forge --tags
+git push origin main --tags
 ```
 
 > 若使用 `git commit -m` 含中文，PowerShell 可能乱码，改用 `git commit -F` 从 UTF-8 文件读取消息。
@@ -158,7 +158,7 @@ git push origin prompt-forge --tags
 
 | 步骤     | 命令 / 文件                                                 |
 | -------- | ----------------------------------------------------------- |
-| 同步分支 | `git pull --rebase origin prompt-forge`                   |
+| 同步分支 | `git pull --rebase origin main`                   |
 | 版本号   | `package.json` + `plugin.json` + `public/plugin.json` |
 | 变更记录 | `CHANGELOG.md`                                            |
 | 质量检查 | `npm run check`                                           |
