@@ -6,11 +6,13 @@ import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
 import { extractVariables, inferTitle, generateId, detectDuplicate } from '../utils/index'
 import { showNotification } from '../utils/platform'
+import { useModal } from '../composables/useModal'
 import TagsInput from '../components/TagsInput.vue'
 
 const router = useRouter()
 const promptStore = usePromptStore()
 const projectStore = useProjectStore()
+const modal = useModal()
 const content = computed(() => router.quickSaveContent.value || '')
 const source = computed(() => router.quickSaveSource.value === 'selected' ? '选中文本' : '剪贴板')
 const detectedVars = computed(() => extractVariables(content.value))
@@ -36,9 +38,14 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKey)
 })
 onUnmounted(() => window.removeEventListener('keydown', handleKey))
-function handleKey(e: KeyboardEvent) {
+async function handleKey(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveNew() }
-  if (e.key === 'Escape') { e.preventDefault(); router.navigateTo('space') }
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    const hasInput = title.value.trim() || tags.value.length > 0 || selectedProjectId.value
+    if (hasInput && !await modal.confirm('放弃本次保存？已填写的内容将丢失。')) return
+    router.navigateTo('space')
+  }
 }
 
 async function saveNew() {

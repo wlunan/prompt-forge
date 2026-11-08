@@ -33,6 +33,10 @@ function open(mode: ModalMode, message: string, opts?: {
   confirmText?: string
   cancelText?: string
 }): Promise<any> {
+  // 若已有未关闭的弹窗，先 settle 旧 Promise，避免 await 永久挂起
+  if (state.value.visible && state.value._resolve) {
+    state.value._resolve(state.value.mode === 'prompt' ? null : false)
+  }
   return new Promise((resolve) => {
     state.value = {
       visible: true,

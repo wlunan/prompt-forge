@@ -4,10 +4,12 @@ import { FolderInput, Trash2, Check, ArrowLeft } from 'lucide-vue-next'
 import { usePromptStore } from '../stores/prompt'
 import { useProjectStore } from '../stores/project'
 import { showNotification } from '../utils/platform'
+import { useModal } from '../composables/useModal'
 import type { Project, ProjectGroup, PromptItem } from '../types'
 
 const prompt = usePromptStore()
 const projectStore = useProjectStore()
+const modal = useModal()
 
 const showNewProject = ref(false)
 const newProjectName = ref('')
@@ -43,6 +45,9 @@ async function createProject() {
 }
 
 async function deleteProject(p: Project) {
+  const memberCount = prompt.liveItems.value.filter(i => i.projectId === p.id).length
+  const hint = memberCount > 0 ? `，其下 ${memberCount} 条提示词将转为"资产"` : ''
+  if (!await modal.confirm(`确定删除项目「${p.name}」？${hint}`)) return
   const previousPrompts = JSON.parse(JSON.stringify(prompt.rawItems.value)) as PromptItem[]
   let changed = false
   prompt.rawItems.value.forEach(item => {
